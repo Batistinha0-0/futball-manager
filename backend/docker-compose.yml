@@ -1,9 +1,17 @@
-# PostgreSQL + API — run only from this directory: cd backend && docker compose up --build
-# Frontend lives in ../frontend (separate); no Docker there.
+# PostgreSQL only — API runs on the host (uvicorn) and connects via localhost:5432.
+# From this directory: docker compose up -d
+# Then: DATABASE_URL=postgresql+psycopg://futball:futball@127.0.0.1:5432/futball uvicorn app.main:app --reload
+# Production image (Render, etc.): build Dockerfile separately — docker build -t futball-api .
+#
+# `name` avoids the folder name "backend" as the Compose project prefix.
+# `container_name` fixes the Postgres container name (docker ps shows futball-postgres).
+
+name: futball-manager
 
 services:
   db:
     image: postgres:16-alpine
+    container_name: futball-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-futball}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-futball}
@@ -18,21 +26,6 @@ services:
       interval: 3s
       timeout: 5s
       retries: 10
-
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        PIP_TRUSTED_HOSTS: ${PIP_TRUSTED_HOSTS:-0}
-    ports:
-      - "${API_PORT:-8000}:8000"
-    environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://futball:futball@db:5432/futball}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
-    depends_on:
-      db:
-        condition: service_healthy
 
 volumes:
   pgdata:

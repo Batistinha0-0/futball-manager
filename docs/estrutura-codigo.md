@@ -6,7 +6,7 @@ Este documento define **como organizar o repositório** para o produto descrito 
 
 | Pacote | Tecnologia | Pastas principais |
 | ------ | ---------- | ------------------ |
-| **Backend** | Python 3.11+, **FastAPI**, Uvicorn, **PostgreSQL** (SQLAlchemy + Alembic) | [`backend/app/`](../backend/app/) — `domain/`, `application/`, `ports/`, `infrastructure/`, `api/`; Docker só no backend: [`backend/docker-compose.yml`](../backend/docker-compose.yml) |
+| **Backend** | Python 3.11+, **FastAPI**, Uvicorn, **PostgreSQL** (SQLAlchemy + Alembic) | [`backend/app/`](../backend/app/) — `domain/`, `application/`, `ports/`, `infrastructure/`, `api/`; [`docker-compose.yml`](../backend/docker-compose.yml) sobe **só Postgres**; API em local ou imagem [`Dockerfile`](../backend/Dockerfile) no deploy |
 | **Frontend** | **React** (JavaScript) + **Vite** | [`frontend/src/`](../frontend/src/) — `components/` (Atomic Design), `hooks/`, `services/`, `strings/pt-BR.js` |
 
 A estrutura prioriza **fronteiras claras** entre domínio, casos de uso, dados e interface; o backend segue **SOLID** (Protocol + injeção via `Depends`); o front segue **Atomic Design** (ver [`frontend/README.md`](../frontend/README.md)).

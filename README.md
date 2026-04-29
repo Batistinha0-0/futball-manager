@@ -146,26 +146,34 @@ O código está organizado em **dois pacotes independentes** na raiz do reposit�
 
 | Pasta           | Tecnologia                         | Notas                                                                                                                                                  |
 | --------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **`backend/`**  | Python 3.11+, **FastAPI**, Uvicorn | API REST, camadas SOLID. **PostgreSQL** (SQLAlchemy + **Alembic**). **Docker** só aqui: [`Dockerfile`](backend/Dockerfile), [`docker-compose.yml`](backend/docker-compose.yml). Sem `DATABASE_URL` → **memória** (testes). |
+| **`backend/`**  | Python 3.11+, **FastAPI**, Uvicorn | API em **local**; **Postgres** no Docker via [`docker-compose.yml`](backend/docker-compose.yml) (só `db`). [`Dockerfile`](backend/Dockerfile) para deploy. Sem `DATABASE_URL` → **memória** (testes). |
 | **`frontend/`** | **React** (JavaScript) + **Vite**  | Mobile-first, **Atomic Design**; sem Docker no repositório. Variáveis em [`frontend/.env.example`](frontend/.env.example).                          |
 
 Pré-requisitos: **Python 3.11+**, **Node.js 20+** (recomendado). Para Postgres local com Docker: **Docker Desktop** (ou engine compatível).
 
-### Docker Compose (PostgreSQL + API) — só no `backend/`
+### Docker (só PostgreSQL) — `backend/`
 
-Toda a stack Docker está em [`backend/docker-compose.yml`](backend/docker-compose.yml). Corre **a partir da pasta `backend/`**:
+O fluxo de desenvolvimento previsto é: **Postgres dentro do Docker**, **API no teu Python local** a ligar a `127.0.0.1:5432` (recomendado: [`python start.py`](backend/start.py) no `backend/`; valida ambiente e base antes de subir o Uvicorn).
+
+O ficheiro [`backend/docker-compose.yml`](backend/docker-compose.yml) sobe **apenas** o serviço `db`. Corre **a partir de `backend/`**:
 
 ```bash
 cd backend
-docker compose up --build
+docker compose up -d
 ```
 
-- **Postgres:** `localhost:5432`, utilizador / base / palavra-passe por defeito `futball` (ajusta em `docker-compose.yml` ou em `backend/.env`; se mudares o utilizador, atualiza o `healthcheck` do serviço `db`).
-- **API:** `http://127.0.0.1:8000` com `DATABASE_URL` para o serviço `db` (valor por defeito já definido no compose).
+- **Postgres:** `localhost:5432`, utilizador / base / palavra-passe por defeito `futball` (ajusta em `docker-compose.yml` ou em `backend/.env`; se mudares o utilizador, atualiza o `healthcheck` do `db`). O contentor chama-se **`futball-postgres`** (o projeto Compose é `futball-manager`, para não usar o nome da pasta `backend`).
+- **API local:** no `backend/.env` (ou no ambiente), define por exemplo:
 
-Opcional: copia [`backend/.env.example`](backend/.env.example) para `backend/.env` e ajusta; o Compose lê `.env` no **mesmo directório** que o ficheiro `docker-compose.yml` ([documentação](https://docs.docker.com/compose/environment-variables/)).
+  ```env
+  DATABASE_URL=postgresql+psycopg://futball:futball@127.0.0.1:5432/futball
+  ```
 
-Migrações **Alembic** correm automaticamente no arranque da API quando `DATABASE_URL` está definida.
+  Depois: `python start.py` (ou `uvicorn app.main:app --reload`) — as migrações **Alembic** correm no arranque quando `DATABASE_URL` está definida.
+
+Opcional: copia [`backend/.env.example`](backend/.env.example) para `backend/.env` e ajusta. O Compose lê `.env` no mesmo directório que o `docker-compose.yml` ([documentação](https://docs.docker.com/compose/environment-variables/)).
+
+A **imagem Docker da API** ([`backend/Dockerfile`](backend/Dockerfile)) mantém-se para **Render** ou outros deploys (`docker build` / CI), não para o dia-a-dia local com este compose.
 
 #### Erro `500 Internal Server Error` ao fazer pull da imagem (Docker Desktop no Windows)
 
@@ -177,22 +185,18 @@ Mensagens com `dockerDesktopLinuxEngine` e falha ao criar/pull `postgres:16-alpi
 4. Testa o pull isolado: `docker pull postgres:16-alpine`. Se também falhar, é rede/registry ou instalação Docker — atualiza o **Docker Desktop** para a versão mais recente.
 5. VPN, proxy corporativo ou antivírus às vezes bloqueiam o registo; desliga temporariamente para testar.
 
-#### Build da API: `SSLCertVerificationError` / `self-signed certificate in certificate chain` ao instalar do PyPI
+#### Build da imagem da API (deploy): `SSLCertVerificationError` ao instalar do PyPI
 
-Isto acontece **dentro do build Docker** quando a rede inspeciona HTTPS (proxy corporativo, etc.) e o Python não confia na cadeia de certificados até ao PyPI.
+Aparece ao correr **`docker build`** (ex.: no Render ou CI) quando a rede inspeciona HTTPS.
 
-1. **Recomendado:** instalar o **certificado raiz da empresa** na imagem (ou pedir à TI a exceção para `pypi.org`) — é a solução correta a longo prazo.
-2. **Workaround do projeto:** em `backend/.env`, define `PIP_TRUSTED_HOSTS=1` e volta a construir **a partir de `backend/`**:
+1. **Recomendado:** certificado raiz da empresa na imagem ou exceção para `pypi.org`.
+2. **Workaround**, a partir de `backend/`:
 
    ```bash
-   cd backend
-   docker compose build --no-cache api
-   docker compose up
+   docker build --build-arg PIP_TRUSTED_HOSTS=1 -t futball-api .
    ```
 
-   Isto passa `--trusted-host` ao `pip` **só durante o build** (por defeito fica desligado, para não afetar builds em ambientes limpos como o Render).
-
-3. Alternativa pontual: `docker compose build --build-arg PIP_TRUSTED_HOSTS=1 api` (com `cd backend` antes, ou `-f backend/docker-compose.yml` a partir da raiz).
+   Isto passa `--trusted-host` ao `pip` só durante o build (em ambientes limpos não é necessário).
 
 ### Render + Neon (produção simples)
 
@@ -209,23 +213,17 @@ Podes usar o blueprint [`render.yaml`](render.yaml) como ponto de partida (**New
 
 ### Como rodar em desenvolvimento
 
-1. **Backend** (porta padrão `8000`), **sem** Docker — só memória (útil para testes rápidos):
+1. **Backend** (porta padrão `8000`), em **Python local**:
 
    ```bash
    cd backend
    pip install -e ".[dev]"
-   uvicorn app.main:app --reload
    ```
+
+   - **Só memória (sem Postgres):** não defines `DATABASE_URL` (ou deixas vazio no `.env`) e corres `python start.py` ou `uvicorn app.main:app --reload`.
+   - **Com Postgres no Docker:** `docker compose up -d` no `backend/`, `DATABASE_URL` no `backend/.env` e `python start.py` (migrações no arranque).
 
    Usa o **ambiente Python** que já tiveres (o projeto **não** assume `venv`).
-
-   Para usar o **Postgres do Compose** a partir do host (sem subir o serviço `api` no Docker), define no `backend/.env`:
-
-   ```env
-   DATABASE_URL=postgresql+psycopg://futball:futball@127.0.0.1:5432/futball
-   ```
-
-   Com o Postgres a correr (`cd backend` e `docker compose up db` ou stack completa), ao arrancar o Uvicorn as migrações aplicam-se automaticamente.
 
 2. **Frontend** (porta padrão `5173`):
 

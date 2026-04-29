@@ -4,41 +4,47 @@ FastAPI application with layered architecture (domain, application, ports, infra
 
 PostgreSQL is used when **`DATABASE_URL`** is set (see `.env.example`). Otherwise the API uses in-memory repositories.
 
-## Run (local)
+## Local development (recommended)
 
-From the `backend/` directory, using your system Python (no venv required by this repo):
+1. **Postgres in Docker** (from this directory). The database container is named **`futball-postgres`** (Compose project **`futball-manager`**, not the folder name `backend`).
 
-```bash
-pip install -e ".[dev]"
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
+   ```bash
+   docker compose up -d
+   ```
 
-With Postgres (from this folder: `docker compose up db`), set `DATABASE_URL` in `.env` — migrations run on startup.
+2. **API on the host** — copy [`.env.example`](.env.example) to `.env` (uncomment or set `DATABASE_URL` for Postgres), then:
 
-## Docker Compose (Postgres + API)
+   ```bash
+   pip install -e ".[dev]"
+   python start.py
+   ```
 
-From **`backend/`** (where [`docker-compose.yml`](docker-compose.yml) lives):
+   [`start.py`](start.py) fixes the working directory to `backend/`, loads `.env`, checks Python ≥ 3.11, CORS, and (if `DATABASE_URL` is set) connects to Postgres before starting Uvicorn. Alternatively: `uvicorn app.main:app --reload`.
 
-```bash
-docker compose up --build
-```
+Migrations (**Alembic**) run automatically on startup when `DATABASE_URL` is set.
 
-Copy [`.env.example`](.env.example) to `.env` here if you want to override ports, `PIP_TRUSTED_HOSTS`, etc.
+## Run without Postgres
 
-## Run (Docker image only)
+Omit `DATABASE_URL` in `.env` (or leave it empty) and run `uvicorn` — uses in-memory storage.
 
-Build context is this folder (`backend/`). Used by `docker compose` above and by Render.
+## Docker image (Render / production)
+
+The [`Dockerfile`](Dockerfile) builds the API container for platforms like Render; it is **not** used by `docker compose` in this repo (compose only runs **PostgreSQL**).
 
 ```bash
 docker build -t futball-api .
 docker run --rm -e DATABASE_URL=postgresql+psycopg://... -p 8000:8000 futball-api
 ```
 
+If `docker build` fails with **SSL / self-signed certificate** to PyPI:
+
+```bash
+docker build --build-arg PIP_TRUSTED_HOSTS=1 -t futball-api .
+```
+
 Open `http://127.0.0.1:8000/docs` for OpenAPI.
 
 ## Migrations (manual)
-
-Migrations also run automatically when the app starts with `DATABASE_URL` set. To run only Alembic:
 
 ```bash
 # Windows (cmd)

@@ -1,0 +1,38 @@
+# PostgreSQL + API — run only from this directory: cd backend && docker compose up --build
+# Frontend lives in ../frontend (separate); no Docker there.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-futball}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-futball}
+      POSTGRES_DB: ${POSTGRES_DB:-futball}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Defaults below must match POSTGRES_USER / POSTGRES_DB (or adjust this line).
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U futball -d futball"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PIP_TRUSTED_HOSTS: ${PIP_TRUSTED_HOSTS:-0}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://futball:futball@db:5432/futball}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

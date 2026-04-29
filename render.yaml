@@ -1,0 +1,16 @@
+# Render Blueprint: Web service from this repo's backend Dockerfile.
+# After deploy: set DATABASE_URL in the Render dashboard (Neon → copy connection string,
+# use postgresql+psycopg://… for SQLAlchemy — see README).
+
+services:
+  - type: web
+    name: futball-manager-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

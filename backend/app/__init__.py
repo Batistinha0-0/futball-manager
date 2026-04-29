@@ -1,0 +1,1 @@
+"""Futball Manager API package."""

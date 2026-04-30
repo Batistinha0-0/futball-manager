@@ -1,5 +1,24 @@
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { HomePage } from "./components/pages/HomePage.jsx";
+import { LoginPage } from "./components/pages/LoginPage.jsx";
+import { MorePage } from "./components/pages/MorePage.jsx";
+import { SquadPage } from "./components/pages/SquadPage.jsx";
+import { AppShell } from "./components/templates/AppShell.jsx";
+import { RequireAuth } from "./components/templates/RequireAuth.jsx";
 
 export default function App() {
-  return <HomePage />;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route element={<RequireAuth />}>
+          <Route element={<AppShell />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/elenco" element={<SquadPage />} />
+            <Route path="/mais" element={<MorePage />} />
+          </Route>
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }

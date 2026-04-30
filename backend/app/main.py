@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health, players
+from app.api.routes import auth, health, players, users_admin
 from app.core.config import get_settings
 
 
@@ -23,6 +23,9 @@ async def lifespan(app: FastAPI):
         os.environ.setdefault("DATABASE_URL", app_settings.database_url)
         alembic_ini = Path(__file__).resolve().parent.parent / "alembic.ini"
         command.upgrade(Config(str(alembic_ini)), "head")
+        from app.startup.super_admin_bootstrap import ensure_bootstrap_super_admin
+
+        ensure_bootstrap_super_admin(app_settings)
     yield
 
 
@@ -43,3 +46,5 @@ app.add_middleware(
 
 app.include_router(health.router, tags=["health"])
 app.include_router(players.router, prefix="/api/v1", tags=["players"])
+app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
+app.include_router(users_admin.router, prefix="/api/v1/super-admin", tags=["super-admin"])

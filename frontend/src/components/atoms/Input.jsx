@@ -1,5 +1,5 @@
 /**
- * @param {{ id?: string, name?: string, type?: string, value?: string, onChange?: (e: import("react").ChangeEvent<HTMLInputElement>) => void, placeholder?: string, "aria-label"?: string, className?: string }} props
+ * @param {{ id?: string, name?: string, type?: string, value?: string, onChange?: (e: import("react").ChangeEvent<HTMLInputElement>) => void, placeholder?: string, autoComplete?: string, "aria-label"?: string, className?: string, disabled?: boolean }} props
  */
 export function Input({
   id,
@@ -8,8 +8,10 @@ export function Input({
   value,
   onChange,
   placeholder,
+  autoComplete,
   "aria-label": ariaLabel,
   className = "",
+  disabled = false,
 }) {
   return (
     <input
@@ -19,7 +21,9 @@ export function Input({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
+      autoComplete={autoComplete}
       aria-label={ariaLabel}
+      disabled={disabled}
       className={`fm-input ${className}`.trim()}
     />
   );

@@ -1,9 +1,20 @@
 /**
- * @param {{ header: import("react").ReactNode, children: import("react").ReactNode }} props
+ * @param {{
+ *   header: import("react").ReactNode,
+ *   children: import("react").ReactNode,
+ *   variant?: "default" | "auth",
+ * }} props
  */
-export function MainLayout({ header, children }) {
+export function MainLayout({ header, children, variant = "default" }) {
+  const rootClass = [
+    "fm-layout",
+    variant === "auth" ? "fm-layout--auth" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className="fm-layout">
+    <div className={rootClass}>
       {header}
       <main className="fm-layout__main">{children}</main>
     </div>

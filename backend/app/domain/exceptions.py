@@ -13,3 +13,15 @@ class ValidationError(DomainError):
     """Raised when domain invariants are violated."""
 
     pass
+
+
+class AuthenticationError(DomainError):
+    """Raised when credentials or tokens are invalid."""
+
+    pass
+
+
+class ConflictError(DomainError):
+    """Raised when an operation conflicts with existing data (e.g. duplicate user_name)."""
+
+    pass

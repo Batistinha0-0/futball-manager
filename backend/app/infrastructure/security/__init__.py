@@ -1,0 +1,1 @@
+"""Security adapters (hashing, JWT)."""

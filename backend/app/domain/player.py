@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 
 
@@ -18,3 +19,6 @@ class Player:
     profile: PlayerProfile
     position: str | None = None
     active: bool = True
+    created_by_user_id: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None

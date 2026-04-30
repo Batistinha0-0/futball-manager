@@ -13,6 +13,9 @@ def _to_domain(row: PlayerRow) -> Player:
         profile=PlayerProfile(row.profile),
         position=row.position,
         active=row.active,
+        created_by_user_id=str(row.created_by_user_id) if row.created_by_user_id else None,
+        created_at=row.created_at,
+        updated_at=row.updated_at,
     )
 
 

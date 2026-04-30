@@ -4,7 +4,11 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.infrastructure.persistence.database import Base
-from app.infrastructure.persistence.models import player_row  # noqa: F401 — register models
+from app.infrastructure.persistence.models import (  # noqa: F401 — register models
+    player_row,
+    refresh_token_row,
+    user_row,
+)
 
 config = context.config
 

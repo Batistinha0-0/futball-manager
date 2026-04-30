@@ -1,6 +1,7 @@
-# Render Blueprint: Web service from this repo's backend Dockerfile.
+# Render Blueprint: API (Docker) + frontend estático (Vite/React).
 # After deploy: set DATABASE_URL in the Render dashboard (Neon → copy connection string,
 # use postgresql+psycopg://… for SQLAlchemy — see README).
+# Frontend: set VITE_API_URL to the public URL da API (build-time).
 
 services:
   - type: web
@@ -13,4 +14,18 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: CORS_ORIGINS
+        sync: false
+
+  - type: web
+    name: futball-manager-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
         sync: false

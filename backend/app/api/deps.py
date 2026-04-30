@@ -10,6 +10,7 @@ from app.application.players.player_service import PlayerService
 from app.core.config import Settings, get_settings
 from app.application.users.user_admin_service import UserAdminService
 from app.domain.exceptions import AuthenticationError
+from app.domain.permissions import Permission, permissions_for
 from app.domain.user import User, UserRole
 from app.infrastructure.persistence.database import get_session_factory
 from app.infrastructure.persistence.memory_player_repository import (
@@ -129,6 +130,28 @@ def require_super_admin(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only super_admin may access this resource.",
+        )
+    return user
+
+
+def require_players_read(
+    user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    if Permission.PLAYERS_READ not in permissions_for(user.role):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Missing permission: players:read.",
+        )
+    return user
+
+
+def require_players_write(
+    user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    if Permission.PLAYERS_WRITE not in permissions_for(user.role):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Missing permission: players:write.",
         )
     return user
 

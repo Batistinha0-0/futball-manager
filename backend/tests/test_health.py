@@ -16,7 +16,7 @@ def test_health_ok(client: TestClient) -> None:
     assert response.json() == {"status": "ok"}
 
 
-def test_players_list_empty(client: TestClient) -> None:
+def test_players_not_public(client: TestClient) -> None:
+    """Without DATABASE_URL auth is unavailable (503); with DB, unauthenticated requests get 401."""
     response = client.get("/api/v1/players")
-    assert response.status_code == 200
-    assert response.json() == []
+    assert response.status_code in (401, 503)

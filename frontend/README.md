@@ -27,3 +27,15 @@ npm run dev
 ```
 
 `VITE_API_URL` must match your API (default `http://127.0.0.1:8000`). Optional: Vite proxies `/api` to the same host for same-origin calls.
+
+## Deploy no Render (site estático)
+
+1. **Root Directory:** `frontend` (monorepo).
+2. **Build command:** `npm install && npm run build`
+3. **Publish directory:** `dist`
+4. **SPA (obrigatório):** no painel do site estático, abra **Redirects / Rewrites** e adicione uma regra **Rewrite**:
+   - **Source:** `/*`
+   - **Destination:** `/index.html`  
+   Sem isto, rotas como `/elenco` devolvem 404 do CDN (página sem o bundle React/CSS — o site parece “sem estilização”).
+
+O `vite.config.js` usa `base: './'` para os ficheiros em `dist/assets/` carregarem com URLs relativas ao `index.html`.

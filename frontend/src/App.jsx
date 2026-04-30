@@ -6,9 +6,15 @@ import { SquadPage } from "./components/pages/SquadPage.jsx";
 import { AppShell } from "./components/templates/AppShell.jsx";
 import { RequireAuth } from "./components/templates/RequireAuth.jsx";
 
+function routerBasename() {
+  const base = import.meta.env.BASE_URL ?? "/";
+  if (base === "/" || base === "./") return undefined;
+  return base.endsWith("/") ? base.slice(0, -1) : base;
+}
+
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={routerBasename()}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireAuth />}>

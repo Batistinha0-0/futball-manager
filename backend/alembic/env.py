@@ -3,6 +3,7 @@ import os
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from app.core.postgres_url import normalize_postgres_url_for_psycopg
 from app.infrastructure.persistence.database import Base
 from app.infrastructure.persistence.models import (  # noqa: F401 — register models
     player_row,
@@ -19,7 +20,7 @@ def get_database_url() -> str:
     url = os.environ.get("DATABASE_URL")
     if not url:
         raise RuntimeError("DATABASE_URL must be set to run Alembic.")
-    return url
+    return normalize_postgres_url_for_psycopg(url.strip())
 
 
 def run_migrations_offline() -> None:

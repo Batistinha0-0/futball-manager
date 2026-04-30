@@ -4,6 +4,8 @@ from typing import Literal
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.postgres_url import normalize_postgres_url_for_psycopg
+
 
 class Settings(BaseSettings):
     """Application settings loaded from environment."""
@@ -43,6 +45,13 @@ class Settings(BaseSettings):
         if isinstance(value, str) and not value.strip():
             return None
         return str(value).strip()
+
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def database_url_use_psycopg3(cls, value: str | None) -> str | None:
+        if not value:
+            return value
+        return normalize_postgres_url_for_psycopg(value)
 
     @field_validator("jwt_secret", mode="before")
     @classmethod

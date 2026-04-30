@@ -1,5 +1,6 @@
 """SQLAlchemy engine and session factory (initialized when DATABASE_URL is set)."""
 
+from app.core.postgres_url import normalize_postgres_url_for_psycopg
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
@@ -19,6 +20,7 @@ def init_engine(database_url: str) -> None:
     global _engine, _SessionLocal
     if _engine is not None:
         return
+    database_url = normalize_postgres_url_for_psycopg(database_url)
     _engine = create_engine(
         database_url,
         pool_pre_ping=True,

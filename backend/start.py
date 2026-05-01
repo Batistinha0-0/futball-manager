@@ -10,6 +10,8 @@ Logging (stderr) — ver `app.startup.logging_config.configure_logging_from_env`
 
 - LOG_LEVEL — nível geral (DEBUG, INFO, …). Default: INFO. Repassado ao Uvicorn em start.py.
 - LOG_LEVEL_MATCH_DAY — opcional; nível só para `app.match_day`. Ex.: LOG_LEVEL_MATCH_DAY=DEBUG
+- PORT — usado no Render (Python nativo): porta de escuta; se existir, host default é 0.0.0.0 e reload default é off.
+- API_HOST / API_PORT / API_RELOAD — override local (ex.: dev com reload).
 """
 
 from __future__ import annotations
@@ -89,9 +91,15 @@ def main() -> None:
 
     import uvicorn
 
-    host = os.environ.get("API_HOST", "127.0.0.1")
-    port = int(os.environ.get("API_PORT", "8000"))
-    reload = os.environ.get("API_RELOAD", "1") not in ("0", "false", "False")
+    # Render e similares exportam PORT (não API_PORT). Em PaaS queremos 0.0.0.0 e sem reload.
+    on_paas = bool(os.environ.get("PORT", "").strip())
+    port_raw = (os.environ.get("API_PORT") or os.environ.get("PORT") or "8000").strip()
+    port = int(port_raw)
+    default_host = "0.0.0.0" if on_paas else "127.0.0.1"
+    host = (os.environ.get("API_HOST") or default_host).strip() or default_host
+    default_reload = "0" if on_paas else "1"
+    reload_raw = os.environ.get("API_RELOAD", default_reload)
+    reload = reload_raw not in ("0", "false", "False")
     uvicorn_log = os.environ.get("LOG_LEVEL", "info").strip().lower()
 
     uvicorn.run(

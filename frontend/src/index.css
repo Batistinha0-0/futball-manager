@@ -118,6 +118,9 @@ html {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  /* Evita zoom automático estranho de texto no Safari iOS */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -719,6 +722,7 @@ body {
   justify-content: center;
   width: fit-content;
   max-width: 100%;
+  min-height: 2.75rem;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
   border: none;
@@ -728,6 +732,7 @@ body {
   background: var(--color-primary);
   color: var(--color-on-primary);
   line-height: 1.2;
+  touch-action: manipulation;
 }
 
 .fm-btn:hover:not(:disabled) {
@@ -2108,6 +2113,7 @@ select.fm-select option {
   padding: 0;
   background: color-mix(in srgb, var(--palette-ink-900, #111) 52%, transparent);
   cursor: pointer;
+  touch-action: none;
   opacity: 0;
   animation: fm-modal-backdrop-in 0.24s ease forwards;
 }
@@ -2185,6 +2191,8 @@ select.fm-select option {
 
 .fm-modal-dialog__body {
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: var(--space-3);
   flex: 1 1 auto;
   min-height: 0;

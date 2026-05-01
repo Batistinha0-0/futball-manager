@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useToast } from "../../context/ToastContext.jsx";
 import { usePlayers } from "../../hooks/usePlayers.js";
+import { useSquadListStagePulse } from "../../hooks/useSquadListStagePulse.js";
 import { strings } from "../../strings/pt-BR.js";
 import { updatePlayer } from "../../services/playersApi.js";
+import { filterPlayersByNameQuery } from "../../utils/playerSearch.js";
 import { Input } from "../atoms/Input.jsx";
 import { SquadPlayersEmptyState } from "../molecules/SquadPlayersEmptyState.jsx";
 import { SquadToolbar } from "../molecules/SquadToolbar.jsx";
@@ -10,24 +12,9 @@ import { SquadPlayerRow } from "../molecules/SquadPlayerRow.jsx";
 import { SquadPlayerFormModal } from "./SquadPlayerFormModal.jsx";
 import { SquadPlayerSheetModal } from "./SquadPlayerSheetModal.jsx";
 
-function playersSignature(players) {
-  return players
-    .map((p) => /** @type {{ id: string }} */ (p).id)
-    .sort()
-    .join("\u0000");
-}
-
 /** @param {Record<string, unknown>} row */
 function clonePlayerRow(row) {
   return { ...row };
-}
-
-/** @param {string} s */
-function foldForSearch(s) {
-  return String(s)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "");
 }
 
 export function SquadPlayerList() {
@@ -45,23 +32,7 @@ export function SquadPlayerList() {
   const activeToggleSeqRef = useRef(/** @type {Record<string, number>} */ ({}));
 
   const listStageRef = useRef(/** @type {HTMLDivElement | null} */ (null));
-  const prevSigRef = useRef(/** @type {string | null} */ (null));
-
-  useEffect(() => {
-    if (loading) return;
-    const sig = playersSignature(players);
-    const el = listStageRef.current;
-    if (!el) {
-      prevSigRef.current = sig;
-      return;
-    }
-    if (prevSigRef.current !== null && prevSigRef.current !== sig) {
-      el.classList.remove("fm-squad-list-stage--pulse");
-      void el.offsetWidth;
-      el.classList.add("fm-squad-list-stage--pulse");
-    }
-    prevSigRef.current = sig;
-  }, [players, loading]);
+  useSquadListStagePulse(players, loading, listStageRef);
 
   function openCreate() {
     setFormOpen(true);
@@ -126,15 +97,10 @@ export function SquadPlayerList() {
 
   const bootstrapping = loading;
 
-  const queryFold = useMemo(() => foldForSearch(nameQuery.trim()), [nameQuery]);
-
-  const filteredPlayers = useMemo(() => {
-    if (!queryFold) return players;
-    return players.filter((p) => {
-      const name = foldForSearch(/** @type {{ display_name?: string }} */ (p).display_name ?? "");
-      return name.includes(queryFold);
-    });
-  }, [players, queryFold]);
+  const filteredPlayers = useMemo(
+    () => filterPlayersByNameQuery(/** @type {Array<Record<string, unknown>>} */ (players), nameQuery),
+    [players, nameQuery],
+  );
 
   return (
     <>

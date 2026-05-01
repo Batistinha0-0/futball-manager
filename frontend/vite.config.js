@@ -2,8 +2,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  // Relative asset URLs so CSS/JS load even if the site is not at the domain root (Render, subpaths).
-  base: "./",
+  // Raiz do domínio (FastAPI + static_site): assets em /assets/... — evita /login/assets/... em Safari ao refrescar rotas do SPA.
+  // Para subpath (ex. /app/), usar base: "/app/" e alinhar o router.
+  base: "/",
   plugins: [react()],
   server: {
     port: 5173,

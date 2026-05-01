@@ -7,10 +7,12 @@ import { SquadPage } from "./components/pages/SquadPage.jsx";
 import { AppShell } from "./components/templates/AppShell.jsx";
 import { RequireAuth } from "./components/templates/RequireAuth.jsx";
 
+/** Base do React Router alinhada ao `base` do Vite (produção: `/`). */
 function routerBasename() {
-  const base = import.meta.env.BASE_URL ?? "/";
-  if (base === "/" || base === "./") return undefined;
-  return base.endsWith("/") ? base.slice(0, -1) : base;
+  const raw = (import.meta.env.BASE_URL ?? "/").trim();
+  if (!raw || raw === "/") return undefined;
+  const normalized = raw.endsWith("/") && raw.length > 1 ? raw.slice(0, -1) : raw;
+  return normalized || undefined;
 }
 
 export default function App() {

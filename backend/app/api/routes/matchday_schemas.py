@@ -5,7 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.application.matchday.match_day_service import TodayView
+from app.application.matchday.match_day_views import TodayView
 
 
 class TeamOut(BaseModel):

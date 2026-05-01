@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import random
 import secrets
 import uuid
-from dataclasses import dataclass, replace
+from dataclasses import replace
 from datetime import datetime, time, timezone
 from typing import Any
 
 from app.application.matchday.balanced_team_draw import build_fixtures_for_session
+from app.application.matchday.match_day_draw_fingerprint import fingerprint_team_slots, load_last_draw_fingerprint
+from app.application.matchday.match_day_views import FixtureView, SessionView, TeamView, TodayView
 from app.application.matchday.team_draw import TeamDrawApplicationService
 from app.core.config import Settings
 from app.core.timezone_helpers import is_sunday_match_layout_active, now_in_app_tz, today_date_in_app_tz
@@ -30,78 +31,6 @@ from app.ports.player_repository import PlayerRepository
 _MAX_DRAW_ATTEMPTS = 500
 
 _log = logging.getLogger("app.match_day")
-
-
-def _fingerprint_team_slots(slots: list[tuple[int, tuple[str, ...]]]) -> str:
-    """Assinatura estável por slot (ordem dos slots + conjuntos ordenados por equipa)."""
-    ordered = sorted(slots, key=lambda x: x[0])
-    payload = [[slot, sorted(list(ids))] for slot, ids in ordered]
-    raw = json.dumps(payload, separators=(",", ":"))
-    return hashlib.sha256(raw.encode()).hexdigest()
-
-
-def _load_last_draw_fingerprint(raw: str | None) -> str | None:
-    """Última assinatura guardada: JSON string \"<sha256>\" (novo) ou legado lista — usa o último elemento."""
-    if not raw:
-        return None
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        return None
-    if isinstance(data, str) and len(data) == 64:
-        return data
-    if isinstance(data, list):
-        for x in reversed(data):
-            if isinstance(x, str) and len(x) == 64:
-                return x
-    return None
-
-
-@dataclass(frozen=True, slots=True)
-class TeamView:
-    slot: int
-    player_ids: tuple[str, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class FixtureView:
-    id: str
-    order_index: int
-    home_team_slot: int
-    away_team_slot: int
-    status: str
-    started_at: datetime | None
-    ended_at: datetime | None
-    home_goals: int
-    away_goals: int
-    duration_seconds: int
-    max_goals_per_team: int
-
-
-@dataclass(frozen=True, slots=True)
-class SessionView:
-    id: str
-    session_date: str
-    timezone: str
-    phase: str
-    default_match_duration_seconds: int
-    default_max_goals_per_team: int
-    reference_start_time: str | None
-    team_count: int
-    players_per_team: int
-    fixed_goalkeepers_enabled: bool
-    fixed_goalkeeper_player_id_1: str | None
-    fixed_goalkeeper_player_id_2: str | None
-    lineup_official: bool
-    teams: tuple[TeamView, ...]
-    fixtures: tuple[FixtureView, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class TodayView:
-    server_now: datetime
-    sunday_match_layout: bool
-    session: SessionView | None
 
 
 class MatchDayService:
@@ -222,7 +151,7 @@ class MatchDayService:
                 "Não é possível resortear com partidas já iniciadas ou concluídas.",
             )
         players = [p for p in self._players.list_players(active_only=True) if p.active]
-        last_fp = _load_last_draw_fingerprint(s.draw_signatures_json)
+        last_fp = load_last_draw_fingerprint(s.draw_signatures_json)
         hist_set = {last_fp} if last_fp else set()
 
         _log.info(
@@ -257,7 +186,7 @@ class MatchDayService:
                 fixed_goalkeeper_player_id_2=s.fixed_goalkeeper_player_id_2,
                 rng=rng,
             )
-            fp = _fingerprint_team_slots(cand)
+            fp = fingerprint_team_slots(cand)
             if fp not in hist_set:
                 slots = cand
                 fp_new = fp

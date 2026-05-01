@@ -40,6 +40,7 @@ class SessionOut(BaseModel):
     fixed_goalkeepers_enabled: bool
     fixed_goalkeeper_player_id_1: str | None
     fixed_goalkeeper_player_id_2: str | None
+    lineup_official: bool = False
     teams: list[TeamOut]
     fixtures: list[FixtureOut]
 
@@ -67,6 +68,7 @@ class TodayOut(BaseModel):
                 fixed_goalkeepers_enabled=s.fixed_goalkeepers_enabled,
                 fixed_goalkeeper_player_id_1=s.fixed_goalkeeper_player_id_1,
                 fixed_goalkeeper_player_id_2=s.fixed_goalkeeper_player_id_2,
+                lineup_official=s.lineup_official,
                 teams=[TeamOut(slot=t.slot, player_ids=list(t.player_ids)) for t in s.teams],
                 fixtures=[
                     FixtureOut(

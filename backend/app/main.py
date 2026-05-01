@@ -12,6 +12,10 @@ from app.core.config import get_settings
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize DB engine and apply migrations when DATABASE_URL is set."""
+    from app.startup.logging_config import configure_logging_from_env
+
+    configure_logging_from_env()
+
     app_settings = get_settings()
     if app_settings.database_url:
         from alembic import command

@@ -1,15 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useToast } from "../../context/ToastContext.jsx";
 import { usePlayers } from "../../hooks/usePlayers.js";
 import { strings } from "../../strings/pt-BR.js";
-import { deletePlayer } from "../../services/playersApi.js";
-import { Button } from "../atoms/Button.jsx";
-import { ModalDialog } from "../molecules/ModalDialog.jsx";
+import { updatePlayer } from "../../services/playersApi.js";
+import { Input } from "../atoms/Input.jsx";
 import { SquadPlayersEmptyState } from "../molecules/SquadPlayersEmptyState.jsx";
 import { SquadToolbar } from "../molecules/SquadToolbar.jsx";
 import { SquadPlayerRow } from "../molecules/SquadPlayerRow.jsx";
 import { SquadPlayerFormModal } from "./SquadPlayerFormModal.jsx";
-
-const DELETE_TITLE_ID = "squad-delete-player-title";
+import { SquadPlayerSheetModal } from "./SquadPlayerSheetModal.jsx";
 
 function playersSignature(players) {
   return players
@@ -18,37 +17,41 @@ function playersSignature(players) {
     .join("\u0000");
 }
 
+/** @param {Record<string, unknown>} row */
+function clonePlayerRow(row) {
+  return { ...row };
+}
+
+/** @param {string} s */
+function foldForSearch(s) {
+  return String(s)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
+}
+
 export function SquadPlayerList() {
-  const [showInactive, setShowInactive] = useState(false);
-  const { players, loading, error, refetch, upsertPlayer } = usePlayers({ activeOnly: !showInactive });
+  const { showToast } = useToast();
+  const { players, loading, error, refetch, upsertPlayer } = usePlayers({ activeOnly: false });
 
   const [formOpen, setFormOpen] = useState(false);
-  const [formMode, setFormMode] = useState(/** @type {"create" | "edit"} */ ("create"));
-  const [editPlayer, setEditPlayer] = useState(/** @type {null | Record<string, unknown>} */ (null));
+  const [sheetPlayer, setSheetPlayer] = useState(/** @type {Record<string, unknown> | null} */ (null));
+  const sheetPlayerRef = useRef(/** @type {Record<string, unknown> | null} */ (null));
+  sheetPlayerRef.current = sheetPlayer;
 
-  const [deleteTarget, setDeleteTarget] = useState(/** @type {null | { id: string, display_name: string }} */ (null));
-  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
-  const [deleteError, setDeleteError] = useState(/** @type {string | null} */ (null));
+  const [nameQuery, setNameQuery] = useState("");
+  const [activeErrorId, setActiveErrorId] = useState(/** @type {string | null} */ (null));
+  /** Por jogador: incrementa a cada toggle; respostas antigas do servidor são ignoradas. */
+  const activeToggleSeqRef = useRef(/** @type {Record<string, number>} */ ({}));
 
   const listStageRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const prevSigRef = useRef(/** @type {string | null} */ (null));
-  /** Evita o “flash” da lista ao só trocar o filtro de inativos (assinatura muda, mas não é edição da base). */
-  const skipListPulseOnceRef = useRef(false);
-
-  useEffect(() => {
-    skipListPulseOnceRef.current = true;
-  }, [showInactive]);
 
   useEffect(() => {
     if (loading) return;
     const sig = playersSignature(players);
     const el = listStageRef.current;
     if (!el) {
-      prevSigRef.current = sig;
-      return;
-    }
-    if (skipListPulseOnceRef.current) {
-      skipListPulseOnceRef.current = false;
       prevSigRef.current = sig;
       return;
     }
@@ -61,78 +64,134 @@ export function SquadPlayerList() {
   }, [players, loading]);
 
   function openCreate() {
-    setFormMode("create");
-    setEditPlayer(null);
     setFormOpen(true);
+  }
+
+  /** @param {Record<string, unknown>} record */
+  function handleSheetUpdated(record) {
+    if (record && typeof record === "object" && record.id != null) {
+      const rid = String(record.id);
+      setActiveErrorId((prev) => (prev === rid ? null : prev));
+    }
+    upsertPlayer(record);
+    setSheetPlayer(record);
   }
 
   /** @param {Record<string, unknown>} p */
-  function openEdit(p) {
-    setFormMode("edit");
-    setEditPlayer(p);
-    setFormOpen(true);
-  }
+  function patchPlayerActive(p, nextActive) {
+    const id = String(/** @type {{ id: unknown }} */ (p).id);
+    const previous = clonePlayerRow(p);
+    const optimistic = { ...p, active: nextActive };
 
-  async function confirmDelete() {
-    if (!deleteTarget) return;
-    setDeleteError(null);
-    setDeleteSubmitting(true);
-    try {
-      await deletePlayer(deleteTarget.id);
-      if (editPlayer && String(/** @type {{ id: string }} */ (editPlayer).id) === deleteTarget.id) {
-        setFormOpen(false);
-        setEditPlayer(null);
-      }
-      setDeleteTarget(null);
-      refetch();
-    } catch {
-      setDeleteError(strings.squadDeleteError);
-    } finally {
-      setDeleteSubmitting(false);
+    const nextSeq = (activeToggleSeqRef.current[id] ?? 0) + 1;
+    activeToggleSeqRef.current[id] = nextSeq;
+
+    setActiveErrorId((prev) => (prev === id ? null : prev));
+
+    upsertPlayer(optimistic);
+    const open = sheetPlayerRef.current;
+    if (open && String(/** @type {{ id: unknown }} */ (open).id) === id) {
+      setSheetPlayer(optimistic);
     }
+
+    void (async () => {
+      try {
+        const updated = await updatePlayer(id, { active: nextActive });
+        if (activeToggleSeqRef.current[id] !== nextSeq) {
+          return;
+        }
+        upsertPlayer(updated);
+        const sp = sheetPlayerRef.current;
+        if (sp && String(/** @type {{ id: unknown }} */ (sp).id) === id) {
+          setSheetPlayer(updated);
+        }
+        showToast({
+          message: nextActive ? strings.toastPlayerActivated : strings.toastPlayerDeactivated,
+          variant: "success",
+        });
+      } catch {
+        if (activeToggleSeqRef.current[id] !== nextSeq) {
+          return;
+        }
+        setActiveErrorId(id);
+        upsertPlayer(previous);
+        const sp = sheetPlayerRef.current;
+        if (sp && String(/** @type {{ id: unknown }} */ (sp).id) === id) {
+          setSheetPlayer(previous);
+        }
+        showToast({ message: strings.toastPlayerActiveFail, variant: "error" });
+      }
+    })();
   }
 
   const bootstrapping = loading;
 
+  const queryFold = useMemo(() => foldForSearch(nameQuery.trim()), [nameQuery]);
+
+  const filteredPlayers = useMemo(() => {
+    if (!queryFold) return players;
+    return players.filter((p) => {
+      const name = foldForSearch(/** @type {{ display_name?: string }} */ (p).display_name ?? "");
+      return name.includes(queryFold);
+    });
+  }, [players, queryFold]);
+
   return (
     <>
-      <SquadToolbar
-        showInactive={showInactive}
-        onShowInactiveChange={setShowInactive}
-        onAddPlayer={openCreate}
-        disabled={bootstrapping}
-      />
+      <SquadToolbar onAddPlayer={openCreate} disabled={bootstrapping} />
 
       {bootstrapping ? (
         <p className="fm-muted fm-squad-list-placeholder">{strings.apiStatusChecking}</p>
       ) : error ? (
         <p className="fm-muted fm-squad-list-placeholder">{strings.squadListError}</p>
       ) : (
-        <div className="fm-squad-list-stage" ref={listStageRef}>
-          {players.length === 0 ? (
-            <SquadPlayersEmptyState />
-          ) : (
-            <ul className="fm-squad-list">
-              {players.map((p) => {
-                const row = /** @type {{ id: string, display_name: string }} */ (p);
-                return (
-                  <SquadPlayerRow
-                    key={row.id}
-                    player={p}
-                    onEdit={() => openEdit(/** @type {Record<string, unknown>} */ (p))}
-                    onDelete={() => {
-                      setDeleteError(null);
-                      setDeleteTarget({
-                        id: row.id,
-                        display_name: row.display_name,
-                      });
-                    }}
-                  />
-                );
-              })}
-            </ul>
-          )}
-        </div>
+        <>
+          {players.length > 0 ? (
+            <div className="fm-field fm-squad-search">
+              <label className="fm-field__label" htmlFor="squad-player-search">
+                {strings.squadSearchLabel}
+              </label>
+              <Input
+                id="squad-player-search"
+                name="squad-player-search"
+                type="search"
+                value={nameQuery}
+                onChange={(e) => setNameQuery(e.target.value)}
+                placeholder={strings.squadSearchPlaceholder}
+                autoComplete="off"
+                enterKeyHint="search"
+                autoCapitalize="words"
+                spellCheck={true}
+                inputMode="search"
+              />
+            </div>
+          ) : null}
+
+          <div className="fm-squad-list-stage" ref={listStageRef}>
+            {players.length === 0 ? (
+              <SquadPlayersEmptyState />
+            ) : filteredPlayers.length === 0 ? (
+              <p className="fm-muted fm-squad-list-placeholder" role="status">
+                {strings.squadSearchNoResults}
+              </p>
+            ) : (
+              <ul className="fm-squad-list">
+                {filteredPlayers.map((p) => {
+                  const row = /** @type {{ id: string }} */ (p);
+                  return (
+                    <SquadPlayerRow
+                      key={row.id}
+                      player={p}
+                      onOpen={() => setSheetPlayer(/** @type {Record<string, unknown>} */ (p))}
+                      onActiveChange={(next) => patchPlayerActive(/** @type {Record<string, unknown>} */ (p), next)}
+                      activeToggleError={activeErrorId === row.id}
+                    />
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </>
       )}
 
       <SquadPlayerFormModal
@@ -145,49 +204,14 @@ export function SquadPlayerList() {
             refetch();
           }
         }}
-        mode={formMode}
-        player={editPlayer}
       />
 
-      <ModalDialog
-        open={deleteTarget !== null}
-        onClose={() => {
-          if (!deleteSubmitting) {
-            setDeleteTarget(null);
-            setDeleteError(null);
-          }
-        }}
-        titleId={DELETE_TITLE_ID}
-        title={strings.squadDeleteTitle}
-        footer={
-          <div className="fm-modal-dialog__actions">
-            <Button
-              type="button"
-              onClick={() => {
-                setDeleteTarget(null);
-                setDeleteError(null);
-              }}
-              disabled={deleteSubmitting}
-            >
-              {strings.usersAdminCancel}
-            </Button>
-            <Button type="button" onClick={confirmDelete} disabled={deleteSubmitting}>
-              {deleteSubmitting ? strings.squadDeleteSubmitting : strings.squadDeleteConfirm}
-            </Button>
-          </div>
-        }
-      >
-        {deleteError ? (
-          <p className="fm-users-admin__action-error fm-users-admin__action-error--compact" role="alert">
-            {deleteError}
-          </p>
-        ) : null}
-        <p className="fm-muted">
-          {deleteTarget
-            ? strings.squadDeleteMessage.replace("{name}", deleteTarget.display_name)
-            : ""}
-        </p>
-      </ModalDialog>
+      <SquadPlayerSheetModal
+        open={sheetPlayer !== null}
+        player={sheetPlayer}
+        onClose={() => setSheetPlayer(null)}
+        onUpdated={handleSheetUpdated}
+      />
     </>
   );
 }

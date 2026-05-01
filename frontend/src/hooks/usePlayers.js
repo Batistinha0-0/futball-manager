@@ -51,24 +51,26 @@ export function usePlayers(options = {}) {
       setLoading(true);
     }
 
-    listPlayers({ activeOnly })
-      .then((data) => {
+    async function loadPlayers() {
+      try {
+        const data = await listPlayers({ activeOnly });
         if (cancelled) return;
         setPlayers(Array.isArray(data) ? data : []);
         setError(false);
         hasLoadedSuccessfullyRef.current = true;
-      })
-      .catch(() => {
+      } catch {
         if (cancelled) return;
         if (!hasLoadedSuccessfullyRef.current) {
           setError(true);
         }
-      })
-      .finally(() => {
-        // Sempre limpar loading: se `finally` só rodasse com !cancelled, pedidos antigos
-        // cancelados (Strict Mode / troca de filtro) podiam deixar loading=true sem novo fetch.
-        setLoading(false);
-      });
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadPlayers();
 
     return () => {
       cancelled = true;

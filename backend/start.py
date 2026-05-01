@@ -5,6 +5,11 @@ Start the FastAPI app after validating configuration and optional DB connectivit
 Run from anywhere (uses this file's directory as the backend root):
 
     python start.py
+
+Logging (stderr) — ver `app.startup.logging_config.configure_logging_from_env` (também no lifespan da app, para funcionar com Uvicorn --reload).
+
+- LOG_LEVEL — nível geral (DEBUG, INFO, …). Default: INFO. Repassado ao Uvicorn em start.py.
+- LOG_LEVEL_MATCH_DAY — opcional; nível só para `app.match_day`. Ex.: LOG_LEVEL_MATCH_DAY=DEBUG
 """
 
 from __future__ import annotations
@@ -72,17 +77,29 @@ def main() -> None:
     _load_env(root)
     validate()
 
+    from app.startup.logging_config import configure_logging_from_env
+
+    configure_logging_from_env()
+    root_name = os.environ.get("LOG_LEVEL", "INFO").strip().upper()
+    md_raw = os.environ.get("LOG_LEVEL_MATCH_DAY", "").strip()
+    extra = f"LOG_LEVEL={root_name}"
+    if md_raw:
+        extra += f" LOG_LEVEL_MATCH_DAY={md_raw.upper()}"
+    print(f"[start] Logging: {extra}", file=sys.stderr)
+
     import uvicorn
 
     host = os.environ.get("API_HOST", "127.0.0.1")
     port = int(os.environ.get("API_PORT", "8000"))
     reload = os.environ.get("API_RELOAD", "1") not in ("0", "false", "False")
+    uvicorn_log = os.environ.get("LOG_LEVEL", "info").strip().lower()
 
     uvicorn.run(
         "app.main:app",
         host=host,
         port=port,
         reload=reload,
+        log_level=uvicorn_log,
     )
 
 

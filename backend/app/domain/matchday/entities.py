@@ -22,6 +22,9 @@ class MatchDaySession:
     fixed_goalkeeper_player_id_2: str | None
     created_at: datetime
     updated_at: datetime
+    draft_teams_json: str | None = None
+    lineup_committed_at: datetime | None = None
+    draw_signatures_json: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

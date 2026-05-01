@@ -22,7 +22,7 @@ class PlayerService:
         *,
         actor: User,
         display_name: str,
-        skill_stars: float,
+        skill_stars: float | None,
         profile: PlayerProfile,
         position: str | None = None,
         active: bool = True,
@@ -30,7 +30,8 @@ class PlayerService:
         name = display_name.strip()
         if not name:
             raise ValidationError("invalid_display_name", "display_name is required.")
-        self._validate_skill_stars(skill_stars)
+        if skill_stars is not None:
+            self._validate_skill_stars(skill_stars)
         pos = self._normalize_position(position)
         now = datetime.now(timezone.utc)
         pid = str(uuid.uuid4())
@@ -61,8 +62,12 @@ class PlayerService:
 
         new_stars = existing.skill_stars
         if "skill_stars" in patch:
-            new_stars = float(patch["skill_stars"])
-            self._validate_skill_stars(new_stars)
+            raw = patch["skill_stars"]
+            if raw is None:
+                new_stars = None
+            else:
+                new_stars = float(raw)
+                self._validate_skill_stars(new_stars)
 
         new_profile = existing.profile
         if "profile" in patch:
@@ -101,7 +106,7 @@ class PlayerService:
     @staticmethod
     def _validate_skill_stars(value: float) -> None:
         if value < 0 or value > 5:
-            raise ValidationError("invalid_skill_stars", "skill_stars must be between 0 and 5.")
+            raise ValidationError("invalid_skill_stars", "skill_stars must be between 0 and 5 (or null to omit).")
 
     @staticmethod
     def _normalize_position(position: str | None) -> str | None:

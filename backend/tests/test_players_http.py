@@ -89,6 +89,29 @@ def test_players_crud_flow(client: TestClient) -> None:
     assert again.json() == []
 
 
+def test_players_create_without_skill_and_patch_null(client: TestClient) -> None:
+    _login(client)
+    create = client.post(
+        "/api/v1/players",
+        json={
+            "display_name": "Sem nível",
+            "profile": "mixed",
+            "active": True,
+        },
+    )
+    assert create.status_code == 201, create.text
+    assert create.json()["skill_stars"] is None
+    pid = create.json()["id"]
+
+    patch = client.patch(f"/api/v1/players/{pid}", json={"skill_stars": 3.5})
+    assert patch.status_code == 200
+    assert patch.json()["skill_stars"] == 3.5
+
+    clear = client.patch(f"/api/v1/players/{pid}", json={"skill_stars": None})
+    assert clear.status_code == 200
+    assert clear.json()["skill_stars"] is None
+
+
 def test_players_list_includes_inactive(client: TestClient) -> None:
     _login(client)
     r = client.post(

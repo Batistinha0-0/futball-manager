@@ -12,7 +12,7 @@ def _to_domain(row: PlayerRow) -> Player:
     return Player(
         id=str(row.id),
         display_name=row.display_name,
-        skill_stars=float(row.skill_stars),
+        skill_stars=float(row.skill_stars) if row.skill_stars is not None else None,
         profile=PlayerProfile(row.profile),
         position=row.position,
         active=row.active,

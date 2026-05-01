@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime, time
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Time
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, Time
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -33,3 +33,6 @@ class MatchDaySessionRow(Base):
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    draft_teams_json: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    lineup_committed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    draw_signatures_json: Mapped[str | None] = mapped_column(Text(), nullable=True)

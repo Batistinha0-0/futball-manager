@@ -15,8 +15,8 @@ class Player:
 
     id: str
     display_name: str
-    skill_stars: float
     profile: PlayerProfile
+    skill_stars: float | None = None
     position: str | None = None
     active: bool = True
     created_by_user_id: str | None = None

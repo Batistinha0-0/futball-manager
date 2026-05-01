@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useAuthMe } from "../../hooks/useAuthMe.js";
 import { useMatchDayToday } from "../../hooks/useMatchDayToday.js";
 import { usePlayers } from "../../hooks/usePlayers.js";
@@ -28,6 +28,10 @@ export function SundayGameCard() {
   const { user } = useAuthMe();
   const canWrite = userCanWritePlayers(/** @type {{ permissions?: string[] }} */ (user ?? {}));
   const { players } = usePlayers({ activeOnly: true });
+  const [settingsDirty, setSettingsDirty] = useState(false);
+  const onSettingsDirtyChange = useCallback((dirty) => {
+    setSettingsDirty(Boolean(dirty));
+  }, []);
 
   const session = /** @type {Record<string, unknown> | undefined} */ (md.today?.session);
   const fixtures = /** @type {Record<string, unknown>[] } */ (session?.fixtures ?? []);
@@ -130,13 +134,26 @@ export function SundayGameCard() {
             settingsSaving={md.settingsSaving}
             players={players}
             onSave={md.patchSettings}
+            onDirtyChange={onSettingsDirtyChange}
           />
-          <SundayTeamsSection canWrite={canWrite} busy={md.busy} hasSession={hasSession} onDraw={md.draw} />
+          <SundayTeamsSection
+            canWrite={canWrite}
+            busy={md.busy}
+            hasSession={hasSession}
+            unsavedSettings={settingsDirty}
+            drawButtonLabel={hasDrawn ? strings.matchDayRedraw : strings.matchDayDraw}
+            onDraw={md.draw}
+          />
           {hasDrawn ? (
             <>
               <Text as="h3" className="fm-matchday-subtitle">
                 {strings.matchDayPitchTitle}
               </Text>
+              {session && session.lineup_official === false ? (
+                <p className="fm-muted fm-sunday-game-card__lineup-hint" role="status">
+                  {strings.sundayGameLineupProvisional}
+                </p>
+              ) : null}
               <PitchLineup teams={teams} players={players} />
               {canWrite && firstPending ? (
                 <div className="fm-sunday-game-card__start-hold">

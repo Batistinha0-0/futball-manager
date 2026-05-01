@@ -8,7 +8,7 @@ from app.domain.player import Player, PlayerProfile
 class PlayerResponse(BaseModel):
     id: str
     display_name: str
-    skill_stars: float
+    skill_stars: float | None
     profile: PlayerProfile
     position: str | None
     active: bool
@@ -29,7 +29,7 @@ class PlayerResponse(BaseModel):
 
 class PlayerCreateBody(BaseModel):
     display_name: str = Field(min_length=1, max_length=255)
-    skill_stars: float = Field(ge=0, le=5)
+    skill_stars: float | None = Field(default=None, ge=0, le=5)
     profile: PlayerProfile
     position: str | None = Field(default=None, max_length=64)
     active: bool = True

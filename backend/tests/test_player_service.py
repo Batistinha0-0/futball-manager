@@ -75,3 +75,18 @@ def test_create_update_delete_player() -> None:
 
     service.delete_player(player_id=p.id)
     assert repo.get_by_id(p.id) is None
+
+
+def test_create_player_without_skill_stars() -> None:
+    from app.domain.user import User, UserRole
+
+    repo = MemoryPlayerRepository()
+    service = PlayerService(repository=repo)
+    actor = User(id="00000000-0000-4000-8000-000000000001", user_name="a", phone="1", role=UserRole.ORGANIZER)
+    p = service.create_player(
+        actor=actor,
+        display_name="X",
+        skill_stars=None,
+        profile=PlayerProfile.MIXED,
+    )
+    assert p.skill_stars is None

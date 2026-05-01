@@ -11,7 +11,7 @@ export function listPlayers(opts = {}) {
 /**
  * @param {{
  *   display_name: string,
- *   skill_stars: number,
+ *   skill_stars?: number | null,
  *   profile: string,
  *   position?: string | null,
  *   active?: boolean,

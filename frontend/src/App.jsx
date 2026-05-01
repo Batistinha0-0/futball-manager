@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { ToastProvider } from "./context/ToastContext.jsx";
 import { HomePage } from "./components/pages/HomePage.jsx";
 import { LoginPage } from "./components/pages/LoginPage.jsx";
 import { MorePage } from "./components/pages/MorePage.jsx";
@@ -15,16 +16,18 @@ function routerBasename() {
 export default function App() {
   return (
     <BrowserRouter basename={routerBasename()}>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route element={<RequireAuth />}>
-          <Route element={<AppShell />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/elenco" element={<SquadPage />} />
-            <Route path="/mais" element={<MorePage />} />
+      <ToastProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<RequireAuth />}>
+            <Route element={<AppShell />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/elenco" element={<SquadPage />} />
+              <Route path="/mais" element={<MorePage />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
+        </Routes>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

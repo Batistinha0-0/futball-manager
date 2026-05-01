@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { strings } from "../../strings/pt-BR.js";
 import { SwitchField } from "../atoms/SwitchField.jsx";
 import { SelectField } from "./SelectField.jsx";
@@ -9,15 +9,58 @@ function patchSignature(patch) {
 }
 
 /**
+ * Patch canónico alinhado ao servidor e a `buildPatch` após hidratação (inclui resolução de GR duplicado).
+ * @param {Record<string, unknown> | null | undefined} s
+ */
+function stablePatchFromSession(s) {
+  if (!s) {
+    return {
+      default_match_duration_seconds: 420,
+      default_max_goals_per_team: 2,
+      team_count: 2,
+      players_per_team: 5,
+      fixed_goalkeepers_enabled: false,
+      fixed_goalkeeper_player_id_1: null,
+      fixed_goalkeeper_player_id_2: null,
+    };
+  }
+  const minutes = Math.round(Number(s.default_match_duration_seconds ?? 420) / 60);
+  const sec = Math.min(3600, Math.max(60, Math.round(minutes) * 60));
+  const fixedGk = Boolean(s.fixed_goalkeepers_enabled);
+  let g1 = s.fixed_goalkeeper_player_id_1 != null && String(s.fixed_goalkeeper_player_id_1) ? String(s.fixed_goalkeeper_player_id_1) : null;
+  let g2 = s.fixed_goalkeeper_player_id_2 != null && String(s.fixed_goalkeeper_player_id_2) ? String(s.fixed_goalkeeper_player_id_2) : null;
+  if (g1 && g2 && g1 === g2) {
+    g2 = null;
+  }
+  return {
+    default_match_duration_seconds: sec,
+    default_max_goals_per_team: Math.min(20, Math.max(0, Math.round(Number(s.default_max_goals_per_team ?? 2)))),
+    team_count: Math.min(12, Math.max(2, Math.round(Number(s.team_count ?? 2)))),
+    players_per_team: Math.min(20, Math.max(1, Math.round(Number(s.players_per_team ?? 5)))),
+    fixed_goalkeepers_enabled: fixedGk,
+    fixed_goalkeeper_player_id_1: fixedGk && g1 ? g1 : null,
+    fixed_goalkeeper_player_id_2: fixedGk && g2 ? g2 : null,
+  };
+}
+
+/**
  * @param {{
  *   session: Record<string, unknown> | null | undefined,
  *   canWrite: boolean,
  *   settingsSaving: boolean,
  *   players: Array<{ id: unknown, display_name?: string, position?: string | null, active?: boolean }>,
  *   onSave: (patch: Record<string, unknown>) => Promise<void>,
+ *   onDirtyChange?: (dirty: boolean) => void,
  * }} props
  */
-export function SundayGameSettingsForm({ session, canWrite, settingsSaving, players, onSave }) {
+export function SundayGameSettingsForm({
+  session,
+  canWrite,
+  settingsSaving,
+  players,
+  onSave,
+  onDirtyChange,
+}) {
   const [minutes, setMinutes] = useState(7);
   const [maxGoals, setMaxGoals] = useState(2);
   const [teamCount, setTeamCount] = useState(2);
@@ -25,11 +68,9 @@ export function SundayGameSettingsForm({ session, canWrite, settingsSaving, play
   const [fixedGk, setFixedGk] = useState(false);
   const [gk1, setGk1] = useState("");
   const [gk2, setGk2] = useState("");
+  const [savedSignature, setSavedSignature] = useState("");
 
   const lastHydratedKeyRef = useRef("__init__");
-  const skipHydrateEchoRef = useRef(false);
-  const lastSentSigRef = useRef("");
-  const debounceTimerRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
 
   const buildPatch = useCallback(() => {
     const sec = Math.min(3600, Math.max(60, Math.round(minutes) * 60));
@@ -44,6 +85,9 @@ export function SundayGameSettingsForm({ session, canWrite, settingsSaving, play
     };
   }, [minutes, maxGoals, teamCount, ppt, fixedGk, gk1, gk2]);
 
+  const currentSignature = useMemo(() => patchSignature(buildPatch()), [buildPatch]);
+  const isDirty = currentSignature !== savedSignature;
+
   useLayoutEffect(() => {
     const id = session ? String(session.id ?? "") : "";
     const key = id || "__empty__";
@@ -51,7 +95,6 @@ export function SundayGameSettingsForm({ session, canWrite, settingsSaving, play
       return;
     }
     lastHydratedKeyRef.current = key;
-    skipHydrateEchoRef.current = true;
 
     if (!session) {
       setMinutes(7);
@@ -61,65 +104,68 @@ export function SundayGameSettingsForm({ session, canWrite, settingsSaving, play
       setFixedGk(false);
       setGk1("");
       setGk2("");
+      const p = stablePatchFromSession(null);
+      setSavedSignature(patchSignature(p));
       return;
     }
-    setMinutes(Math.round(Number(session.default_match_duration_seconds ?? 420) / 60));
-    setMaxGoals(Number(session.default_max_goals_per_team ?? 2));
-    setTeamCount(Number(session.team_count ?? 2));
-    setPpt(Number(session.players_per_team ?? 5));
-    setFixedGk(Boolean(session.fixed_goalkeepers_enabled));
-    setGk1(String(session.fixed_goalkeeper_player_id_1 ?? ""));
-    setGk2(String(session.fixed_goalkeeper_player_id_2 ?? ""));
+
+    const p = stablePatchFromSession(session);
+    setMinutes(Math.round(Number(p.default_match_duration_seconds) / 60));
+    setMaxGoals(Number(p.default_max_goals_per_team ?? 2));
+    setTeamCount(Number(p.team_count ?? 2));
+    setPpt(Number(p.players_per_team ?? 5));
+    setFixedGk(Boolean(p.fixed_goalkeepers_enabled));
+    setGk1(p.fixed_goalkeeper_player_id_1 ? String(p.fixed_goalkeeper_player_id_1) : "");
+    setGk2(p.fixed_goalkeeper_player_id_2 ? String(p.fixed_goalkeeper_player_id_2) : "");
+    setSavedSignature(patchSignature(p));
   }, [session]);
 
   useEffect(() => {
-    if (!canWrite) return;
+    onDirtyChange?.(canWrite && isDirty);
+  }, [canWrite, isDirty, onDirtyChange]);
 
-    if (skipHydrateEchoRef.current) {
-      skipHydrateEchoRef.current = false;
-      lastSentSigRef.current = patchSignature(buildPatch());
-      return;
-    }
+  const setGk1Safe = useCallback((v) => {
+    setGk1(v);
+    if (v && v === gk2) setGk2("");
+  }, [gk2]);
 
+  const setGk2Safe = useCallback((v) => {
+    setGk2(v);
+    if (v && v === gk1) setGk1("");
+  }, [gk1]);
+
+  const handleSave = useCallback(async () => {
+    if (!isDirty || settingsSaving) return;
     const patch = buildPatch();
-    const sig = patchSignature(patch);
-    if (sig === lastSentSigRef.current) {
-      return;
+    try {
+      await onSave(patch);
+      setSavedSignature(patchSignature(patch));
+    } catch {
+      /* actionError no hook */
     }
+  }, [buildPatch, isDirty, onSave, settingsSaving]);
 
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-    debounceTimerRef.current = setTimeout(() => {
-      debounceTimerRef.current = null;
-      void (async () => {
-        try {
-          await onSave(patch);
-          lastSentSigRef.current = sig;
-        } catch {
-          /* actionError no hook */
-        }
-      })();
-    }, 450);
+  const gkPlayerOptions = useMemo(
+    () =>
+      players
+        .filter((p) => p.active !== false && String(p.position ?? "").trim().toUpperCase() === "GL")
+        .map((p) => ({
+          value: String(p.id),
+          label: String(p.display_name ?? p.id),
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label, "pt")),
+    [players],
+  );
 
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-        debounceTimerRef.current = null;
-      }
-    };
-  }, [canWrite, buildPatch, onSave, minutes, maxGoals, teamCount, ppt, fixedGk, gk1, gk2]);
+  const gkOptionsForGk1 = useMemo(
+    () => [{ value: "", label: strings.sundayGameGkUnset }, ...gkPlayerOptions.filter((o) => o.value !== gk2)],
+    [gkPlayerOptions, gk2],
+  );
 
-  const gkOptions = [
-    { value: "", label: strings.sundayGameGkUnset },
-    ...players
-      .filter((p) => p.active !== false && String(p.position ?? "").trim().toUpperCase() === "GL")
-      .map((p) => ({
-        value: String(p.id),
-        label: String(p.display_name ?? p.id),
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label, "pt")),
-  ];
+  const gkOptionsForGk2 = useMemo(
+    () => [{ value: "", label: strings.sundayGameGkUnset }, ...gkPlayerOptions.filter((o) => o.value !== gk1)],
+    [gkPlayerOptions, gk1],
+  );
 
   if (!canWrite) {
     return (
@@ -195,6 +241,7 @@ export function SundayGameSettingsForm({ session, canWrite, settingsSaving, play
             checked={fixedGk}
             onChange={setFixedGk}
             disabled={fieldDisabled}
+            large
           />
         </div>
 
@@ -211,9 +258,9 @@ export function SundayGameSettingsForm({ session, canWrite, settingsSaving, play
                     id="sunday-gk-a"
                     label={strings.sundayGameGkRoleA}
                     value={gk1}
-                    onChange={setGk1}
+                    onChange={setGk1Safe}
                     disabled={fieldDisabled || !showGkPanel}
-                    options={gkOptions}
+                    options={gkOptionsForGk1}
                   />
                 </div>
                 <div className="fm-sunday-gk-divider" aria-hidden="true" />
@@ -222,14 +269,25 @@ export function SundayGameSettingsForm({ session, canWrite, settingsSaving, play
                     id="sunday-gk-b"
                     label={strings.sundayGameGkRoleB}
                     value={gk2}
-                    onChange={setGk2}
+                    onChange={setGk2Safe}
                     disabled={fieldDisabled || !showGkPanel}
-                    options={gkOptions}
+                    options={gkOptionsForGk2}
                   />
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="fm-sunday-settings__save-row">
+          <button
+            type="button"
+            className="fm-btn fm-sunday-settings__save-btn"
+            disabled={fieldDisabled || !isDirty}
+            onClick={() => void handleSave()}
+          >
+            {strings.sundayGameSettingsSave}
+          </button>
         </div>
       </div>
     </div>

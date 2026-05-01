@@ -61,9 +61,14 @@ export function LiveFixturePanel({
       </div>
 
       {canWrite && isPending ? (
-        <button type="button" className="fm-btn" disabled={busy} onClick={() => onStart()}>
-          {strings.matchDayStartMatch}
-        </button>
+        <PressHoldButton
+          label={strings.matchDayStartHold}
+          onComplete={() => {
+            void onStart();
+          }}
+          disabled={busy}
+          variant="primary"
+        />
       ) : null}
 
       {canWrite && isLive ? (

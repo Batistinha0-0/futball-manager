@@ -118,8 +118,11 @@ def test_match_day_draw_start_goal_finish_flow(client: TestClient) -> None:
     assert patch.status_code == 200
     assert patch.json()["session"]["fixtures"][0]["duration_seconds"] == 300
 
+    assert d["session"]["lineup_official"] is False
+
     start = client.post(f"/api/v1/match-day/today/fixtures/{fid}/start")
     assert start.status_code == 200
+    assert start.json()["session"]["lineup_official"] is True
     assert start.json()["session"]["phase"] == "live"
     assert start.json()["session"]["fixtures"][0]["status"] == "live"
 
@@ -161,8 +164,8 @@ def test_match_day_fixed_goalkeepers_two_teams(client: TestClient) -> None:
     _login(client)
     g1 = _create_player(client, "GR1", 3.0, "GL")
     g2 = _create_player(client, "GR2", 2.5, "GL")
-    _create_player(client, "C", 4.0, "MC")
-    _create_player(client, "D", 3.5, "MC")
+    for name in ("C", "D", "E", "F"):
+        _create_player(client, name, 3.0, "MC")
     client.patch(
         "/api/v1/match-day/today/settings",
         json={
@@ -176,9 +179,9 @@ def test_match_day_fixed_goalkeepers_two_teams(client: TestClient) -> None:
     dr = client.post("/api/v1/match-day/today/draw")
     assert dr.status_code == 200, dr.text
     teams = dr.json()["session"]["teams"]
-    by_slot = {t["slot"]: t["player_ids"] for t in teams}
-    assert g1 in by_slot[1]
-    assert g2 in by_slot[2]
+    on_field = {pid for t in teams for pid in t["player_ids"]}
+    assert g1 not in on_field and g2 not in on_field
+    assert len(on_field) == 4
 
 
 def test_match_day_fixed_goalkeepers_three_teams_gol_a(client: TestClient) -> None:
@@ -200,9 +203,49 @@ def test_match_day_fixed_goalkeepers_three_teams_gol_a(client: TestClient) -> No
     assert dr.status_code == 200, dr.text
     teams = dr.json()["session"]["teams"]
     by_slot = {t["slot"]: t["player_ids"] for t in teams}
-    assert g1 in by_slot[1]
-    assert g1 not in by_slot[2] and g1 not in by_slot[3]
+    on_field = {pid for t in teams for pid in t["player_ids"]}
+    assert g1 in on_field
     assert len(by_slot[1]) == len(by_slot[2]) == len(by_slot[3]) == 2
+
+
+def test_match_day_consecutive_draws_differ_from_previous(client: TestClient) -> None:
+    _login(client)
+    for i in range(10):
+        _create_player(client, f"D{i}", 2.5 + (i % 4) * 0.4)
+    client.patch(
+        "/api/v1/match-day/today/settings",
+        json={"team_count": 2, "players_per_team": 4, "default_match_duration_seconds": 420},
+    )
+    prev_key: str | None = None
+    for _ in range(12):
+        r = client.post("/api/v1/match-day/today/draw")
+        assert r.status_code == 200, r.text
+        teams = r.json()["session"]["teams"]
+        key = "|".join(
+            ",".join(sorted(t["player_ids"]))
+            for t in sorted(teams, key=lambda x: int(x["slot"]))
+        )
+        if prev_key is not None:
+            assert key != prev_key
+        prev_key = key
+
+
+def test_match_day_redraw_keeps_fixture_id_and_lineup_stays_provisional(client: TestClient) -> None:
+    _login(client)
+    _create_player(client, "A", 5.0)
+    _create_player(client, "B", 3.0)
+    client.patch(
+        "/api/v1/match-day/today/settings",
+        json={"team_count": 2, "players_per_team": 1, "default_match_duration_seconds": 420},
+    )
+    d1 = client.post("/api/v1/match-day/today/draw").json()
+    fid1 = d1["session"]["fixtures"][0]["id"]
+    assert d1["session"]["lineup_official"] is False
+    d2 = client.post("/api/v1/match-day/today/draw").json()
+    fid2 = d2["session"]["fixtures"][0]["id"]
+    assert fid1 == fid2
+    assert d2["session"]["lineup_official"] is False
+    assert len(d2["session"]["teams"]) == 2
 
 
 def test_match_day_fixed_goalkeeper_single_gol_a(client: TestClient) -> None:
@@ -225,6 +268,6 @@ def test_match_day_fixed_goalkeeper_single_gol_a(client: TestClient) -> None:
     assert dr.status_code == 200, dr.text
     teams = dr.json()["session"]["teams"]
     by_slot = {t["slot"]: t["player_ids"] for t in teams}
-    assert g1 in by_slot[1]
-    assert g1 not in by_slot[2]
-    assert len(by_slot[2]) == 2
+    on_field = {pid for t in teams for pid in t["player_ids"]}
+    assert g1 in on_field
+    assert len(by_slot[1]) == len(by_slot[2]) == 2

@@ -42,6 +42,9 @@ def _session_from_row(r: MatchDaySessionRow) -> MatchDaySession:
         else None,
         created_at=r.created_at,
         updated_at=r.updated_at,
+        draft_teams_json=r.draft_teams_json,
+        lineup_committed_at=r.lineup_committed_at,
+        draw_signatures_json=r.draw_signatures_json,
     )
 
 
@@ -122,6 +125,9 @@ class SqlAlchemyMatchDayRepository(MatchDayRepository):
                 else None,
                 created_at=session.created_at,
                 updated_at=session.updated_at,
+                draft_teams_json=session.draft_teams_json,
+                lineup_committed_at=session.lineup_committed_at,
+                draw_signatures_json=session.draw_signatures_json,
             )
             self._s.add(row)
         else:
@@ -140,6 +146,9 @@ class SqlAlchemyMatchDayRepository(MatchDayRepository):
                 _sid(session.fixed_goalkeeper_player_id_2) if session.fixed_goalkeeper_player_id_2 else None
             )
             row.updated_at = session.updated_at
+            row.draft_teams_json = session.draft_teams_json
+            row.lineup_committed_at = session.lineup_committed_at
+            row.draw_signatures_json = session.draw_signatures_json
         # Garantir INSERT/UPDATE da sessão antes de filhos (equipas/fixtures) no mesmo flush/commit —
         # sem relationship FK, o SQLAlchemy pode ordenar INSERTs por nome de tabela e violar FK no Postgres.
         self._s.flush()

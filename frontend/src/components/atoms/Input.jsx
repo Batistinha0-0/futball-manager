@@ -1,5 +1,6 @@
 /**
- * @param {{ id?: string, name?: string, type?: string, value?: string, onChange?: (e: import("react").ChangeEvent<HTMLInputElement>) => void, placeholder?: string, autoComplete?: string, "aria-label"?: string, className?: string, disabled?: boolean }} props
+ * Campos controlados comuns + demais atributos nativos (`enterKeyHint`, `inputMode`, etc.).
+ * @param {import("react").InputHTMLAttributes<HTMLInputElement> & { className?: string }} props
  */
 export function Input({
   id,
@@ -12,9 +13,11 @@ export function Input({
   "aria-label": ariaLabel,
   className = "",
   disabled = false,
+  ...rest
 }) {
   return (
     <input
+      {...rest}
       id={id}
       name={name}
       type={type}

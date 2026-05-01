@@ -17,7 +17,7 @@ class PlayerRow(Base):
         default=uuid.uuid4,
     )
     display_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    skill_stars: Mapped[float] = mapped_column(Numeric(3, 1), nullable=False)
+    skill_stars: Mapped[float | None] = mapped_column(Numeric(3, 1), nullable=True)
     profile: Mapped[str] = mapped_column(String(32), nullable=False)
     position: Mapped[str | None] = mapped_column(String(64), nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)

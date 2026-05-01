@@ -1,5 +1,6 @@
 import { strings } from "../../strings/pt-BR.js";
-import { Button } from "../atoms/Button.jsx";
+import { IconSquadEdit } from "../atoms/IconSquadEdit.jsx";
+import { IconSquadTrash } from "../atoms/IconSquadTrash.jsx";
 
 function profileLabel(profile) {
   if (profile === "attack") return strings.squadProfileAttack;
@@ -24,20 +25,33 @@ export function SquadPlayerRow({ player, onEdit, onDelete }) {
   return (
     <li className="fm-squad-row">
       <div className="fm-squad-row__head">
-        <span className="fm-squad-row__name">{player.display_name}</span>
+        <div className="fm-squad-row__title">
+          <span className="fm-squad-row__name">{player.display_name}</span>
+          <span
+            className="fm-squad-row__status"
+            aria-label={player.active ? strings.squadRowStatusActiveAria : strings.squadRowStatusInactiveAria}
+            title={player.active ? strings.squadActive : strings.squadInactive}
+          >
+            <span
+              className={
+                player.active ? "fm-squad-row__status-dot fm-squad-row__status-dot--live" : "fm-squad-row__status-dot"
+              }
+            />
+          </span>
+        </div>
         <div className="fm-squad-row__head-right">
-          {player.active ? (
-            <span className="fm-pill fm-pill--ok fm-squad-row__pill">{strings.squadActive}</span>
-          ) : (
-            <span className="fm-pill fm-pill--pending fm-squad-row__pill">{strings.squadInactive}</span>
-          )}
           <div className="fm-squad-row__actions">
-            <Button type="button" className="fm-btn--ghost" onClick={onEdit}>
-              {strings.squadEdit}
-            </Button>
-            <Button type="button" className="fm-btn--ghost fm-btn--danger" onClick={onDelete}>
-              {strings.squadRemove}
-            </Button>
+            <button type="button" className="fm-squad-row__icon-btn" onClick={onEdit} aria-label={strings.squadRowEditAria}>
+              <IconSquadEdit />
+            </button>
+            <button
+              type="button"
+              className="fm-squad-row__icon-btn fm-squad-row__icon-btn--danger"
+              onClick={onDelete}
+              aria-label={strings.squadRowRemoveAria}
+            >
+              <IconSquadTrash />
+            </button>
           </div>
         </div>
       </div>

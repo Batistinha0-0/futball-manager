@@ -1,5 +1,4 @@
 import { strings } from "../../strings/pt-BR.js";
-import { Text } from "../atoms/Text.jsx";
 import { AppHeader } from "../organisms/AppHeader.jsx";
 import { SquadPlayerList } from "../organisms/SquadPlayerList.jsx";
 import { MainLayout } from "../templates/MainLayout.jsx";
@@ -14,11 +13,11 @@ export function SquadPage() {
         />
       }
     >
-      <section className="fm-card">
-        <Text as="h2" className="fm-card__title">
+      <section className="fm-card fm-squad-page" aria-labelledby="squad-page-heading">
+        <h2 id="squad-page-heading" className="fm-card__title fm-squad-page__title">
           {strings.squadPageTitle}
-        </Text>
-        <p className="fm-muted">{strings.squadPageIntro}</p>
+        </h2>
+        <p className="fm-muted fm-squad-page__lede">{strings.squadPageIntro}</p>
         <SquadPlayerList />
       </section>
     </MainLayout>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchCurrentUser } from "../services/authApi.js";
 
 /**
- * Utilizador autenticado (GET /auth/me) ou null.
+ * Usuário autenticado (GET /auth/me) ou null.
  * @returns {{ user: object | null, loading: boolean, error: boolean, reload: () => void }}
  */
 export function useAuthMe() {

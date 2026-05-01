@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     #: If unset, API uses in-memory repositories for local dev without a database.
     database_url: str | None = None
 
+    #: IANA tz para domingo / janelas do dia de jogo (ex.: Europe/Lisbon, America/Sao_Paulo).
+    app_timezone: str = "Europe/Lisbon"
+
     #: Required when persisting users / issuing JWTs (set in any environment that uses auth).
     jwt_secret: str = ""
     jwt_algorithm: str = "HS256"

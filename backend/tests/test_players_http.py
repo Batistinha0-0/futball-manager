@@ -58,7 +58,7 @@ def test_players_crud_flow(client: TestClient) -> None:
             "display_name": "Zé Goleiro",
             "skill_stars": 4.0,
             "profile": "defense",
-            "position": "GR",
+            "position": "GL",
             "active": True,
         },
     )

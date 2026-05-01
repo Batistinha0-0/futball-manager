@@ -9,6 +9,11 @@ import { Text } from "../atoms/Text.jsx";
 
 const TITLE_ID = "sa-edit-user-modal-title";
 
+const ROLE_SELECT_OPTIONS = [
+  { value: "organizer", label: strings.usersAdminRoleOrganizer },
+  { value: "admin", label: strings.usersAdminRoleAdmin },
+];
+
 function roleLabel(role) {
   if (role === "super_admin") return strings.usersAdminRoleSuperAdmin;
   if (role === "admin") return strings.usersAdminRoleAdmin;
@@ -141,12 +146,10 @@ export function SuperAdminUserEditModal({ open, user, onClose, onSaved }) {
               id="sa-edit-role"
               label={strings.usersAdminColRole}
               value={editRole}
-              onChange={(e) => setEditRole(e.target.value)}
+              onChange={setEditRole}
               disabled={submitting}
-            >
-              <option value="organizer">{strings.usersAdminRoleOrganizer}</option>
-              <option value="admin">{strings.usersAdminRoleAdmin}</option>
-            </SelectField>
+              options={ROLE_SELECT_OPTIONS}
+            />
           ) : null}
           <FormField
             id="sa-edit-password"

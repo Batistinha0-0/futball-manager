@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import auth, health, players, users_admin
+from app.api.routes import auth, health, matchday, players, users_admin
 from app.core.config import get_settings
 
 
@@ -46,5 +46,6 @@ app.add_middleware(
 
 app.include_router(health.router, tags=["health"])
 app.include_router(players.router, prefix="/api/v1", tags=["players"])
+app.include_router(matchday.router, prefix="/api/v1", tags=["match-day"])
 app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
 app.include_router(users_admin.router, prefix="/api/v1/super-admin", tags=["super-admin"])

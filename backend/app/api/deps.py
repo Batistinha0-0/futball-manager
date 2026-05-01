@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.application.auth.auth_service import AuthService
+from app.application.matchday.match_day_service import MatchDayService
 from app.application.players.player_service import PlayerService
 from app.core.config import Settings, get_settings
 from app.application.users.user_admin_service import UserAdminService
@@ -13,10 +14,12 @@ from app.domain.exceptions import AuthenticationError
 from app.domain.permissions import Permission, permissions_for
 from app.domain.user import User, UserRole
 from app.infrastructure.persistence.database import get_session_factory
+from app.infrastructure.persistence.memory_match_day_repository import MemoryMatchDayRepository
 from app.infrastructure.persistence.memory_player_repository import (
     MemoryPlayerRepository,
     create_default_memory_repository,
 )
+from app.infrastructure.persistence.sqlalchemy_match_day_repository import SqlAlchemyMatchDayRepository
 from app.infrastructure.persistence.sqlalchemy_player_repository import (
     SqlAlchemyPlayerRepository,
 )
@@ -33,6 +36,11 @@ from app.infrastructure.security.pyjwt_access_token_service import PyJwtAccessTo
 @lru_cache
 def _memory_repo_singleton() -> MemoryPlayerRepository:
     return create_default_memory_repository()
+
+
+@lru_cache
+def _memory_match_day_singleton() -> MemoryMatchDayRepository:
+    return MemoryMatchDayRepository()
 
 
 def get_db(
@@ -68,6 +76,23 @@ def get_player_service(
     if settings.database_url and db is not None:
         return PlayerService(repository=SqlAlchemyPlayerRepository(db))
     return PlayerService(repository=_memory_repo_singleton())
+
+
+def get_match_day_service(
+    settings: Annotated[Settings, Depends(get_settings)],
+    db: Annotated[Session | None, Depends(get_db)],
+) -> MatchDayService:
+    if settings.database_url and db is not None:
+        return MatchDayService(
+            settings=settings,
+            match_days=SqlAlchemyMatchDayRepository(db),
+            players=SqlAlchemyPlayerRepository(db),
+        )
+    return MatchDayService(
+        settings=settings,
+        match_days=_memory_match_day_singleton(),
+        players=_memory_repo_singleton(),
+    )
 
 
 @lru_cache

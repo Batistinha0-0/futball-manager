@@ -8,6 +8,7 @@ import { listPlayers } from "../services/playersApi.js";
  *   loading: boolean,
  *   error: boolean,
  *   refetch: () => void,
+ *   upsertPlayer: (player: Record<string, unknown>) => void,
  * }}
  */
 export function usePlayers(options = {}) {
@@ -22,6 +23,26 @@ export function usePlayers(options = {}) {
   const refetch = useCallback(() => {
     setTick((t) => t + 1);
   }, []);
+
+  /** Atualiza a lista com o JSON do POST/PATCH (evita novo GET logo após criar/editar). */
+  const upsertPlayer = useCallback(
+    /** @param {Record<string, unknown>} player */
+    (player) => {
+      const id = player.id;
+      if (id == null || id === "") return;
+      const idStr = String(id);
+      const isActive = Boolean(player.active);
+
+      setPlayers((prev) => {
+        const rest = prev.filter((p) => String(/** @type {{ id: unknown }} */ (p).id) !== idStr);
+        if (activeOnly && !isActive) {
+          return rest;
+        }
+        return [player, ...rest];
+      });
+    },
+    [activeOnly],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -44,7 +65,9 @@ export function usePlayers(options = {}) {
         }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        // Sempre limpar loading: se `finally` só rodasse com !cancelled, pedidos antigos
+        // cancelados (Strict Mode / troca de filtro) podiam deixar loading=true sem novo fetch.
+        setLoading(false);
       });
 
     return () => {
@@ -52,5 +75,5 @@ export function usePlayers(options = {}) {
     };
   }, [activeOnly, tick]);
 
-  return { players, loading, error, refetch };
+  return { players, loading, error, refetch, upsertPlayer };
 }

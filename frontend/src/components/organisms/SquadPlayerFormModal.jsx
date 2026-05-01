@@ -1,26 +1,35 @@
-import { useEffect, useState } from "react";
-import { strings } from "../../strings/pt-BR.js";
+import { useEffect, useMemo, useState } from "react";
+import { strings, squadPositionSelectOptions } from "../../strings/pt-BR.js";
 import { createPlayer, updatePlayer } from "../../services/playersApi.js";
 import { Button } from "../atoms/Button.jsx";
 import { FormField } from "../molecules/FormField.jsx";
 import { ModalDialog } from "../molecules/ModalDialog.jsx";
 import { SelectField } from "../molecules/SelectField.jsx";
+import { StarRatingField, normalizeHalfStars } from "../molecules/StarRatingField.jsx";
 
 const TITLE_CREATE = "squad-modal-create-title";
 const TITLE_EDIT = "squad-modal-edit-title";
+
+const POSITION_VALUES = new Set(squadPositionSelectOptions.map((o) => o.value));
+
+const SQUAD_PROFILE_OPTIONS = [
+  { value: "attack", label: strings.squadProfileAttack },
+  { value: "defense", label: strings.squadProfileDefense },
+  { value: "mixed", label: strings.squadProfileMixed },
+];
 
 /**
  * @param {{
  *   open: boolean,
  *   onClose: () => void,
- *   onSaved: () => void,
+ *   onSaved: (record?: Record<string, unknown> | null) => void,
  *   mode: "create" | "edit",
  *   player: { id: string, display_name: string, skill_stars: number, profile: string, position: string | null, active: boolean } | null,
  * }} props
  */
 export function SquadPlayerFormModal({ open, onClose, onSaved, mode, player }) {
   const [displayName, setDisplayName] = useState("");
-  const [skillStars, setSkillStars] = useState("3");
+  const [skillStars, setSkillStars] = useState(3);
   const [profile, setProfile] = useState("mixed");
   const [position, setPosition] = useState("");
   const [active, setActive] = useState(true);
@@ -32,13 +41,13 @@ export function SquadPlayerFormModal({ open, onClose, onSaved, mode, player }) {
     setError(null);
     if (mode === "edit" && player) {
       setDisplayName(player.display_name);
-      setSkillStars(String(player.skill_stars));
+      setSkillStars(normalizeHalfStars(player.skill_stars));
       setProfile(player.profile);
       setPosition(player.position ?? "");
       setActive(player.active);
     } else {
       setDisplayName("");
-      setSkillStars("3");
+      setSkillStars(3);
       setProfile("mixed");
       setPosition("");
       setActive(true);
@@ -53,33 +62,41 @@ export function SquadPlayerFormModal({ open, onClose, onSaved, mode, player }) {
       setError(strings.squadFormErrorName);
       return;
     }
-    const stars = Number.parseFloat(skillStars);
-    if (Number.isNaN(stars) || stars < 0 || stars > 5) {
+    const stars = skillStars;
+    if (!Number.isFinite(stars) || stars < 0 || stars > 5) {
       setError(strings.squadFormErrorStars);
       return;
     }
 
     setSubmitting(true);
     try {
+      const posTrim = position.trim();
+      const positionPayload = posTrim === "" ? null : posTrim.slice(0, 64);
+      /** @type {Record<string, unknown> | null} */
+      let saved = null;
       if (mode === "create") {
-        await createPlayer({
+        saved = await createPlayer({
           display_name: name,
           skill_stars: stars,
           profile,
-          position: position.trim() || null,
+          position: positionPayload,
           active,
         });
       } else if (player) {
-        await updatePlayer(player.id, {
+        saved = await updatePlayer(player.id, {
           display_name: name,
           skill_stars: stars,
           profile,
-          position: position.trim() || null,
+          position: positionPayload,
           active,
         });
       }
-      onSaved();
       onClose();
+      if (saved && typeof saved === "object" && saved.id != null) {
+        onSaved(saved);
+      } else {
+        onSaved(null);
+      }
     } catch {
       setError(strings.squadFormErrorGeneric);
     } finally {
@@ -89,6 +106,20 @@ export function SquadPlayerFormModal({ open, onClose, onSaved, mode, player }) {
 
   const titleId = mode === "create" ? TITLE_CREATE : TITLE_EDIT;
   const title = mode === "create" ? strings.squadModalCreateTitle : strings.squadModalEditTitle;
+
+  const unknownPosition =
+    mode === "edit" && player?.position && !POSITION_VALUES.has(player.position) ? player.position : null;
+
+  const positionSelectOptions = useMemo(() => {
+    const base = squadPositionSelectOptions;
+    if (unknownPosition && position === unknownPosition && !base.some((o) => o.value === unknownPosition)) {
+      return [
+        { value: unknownPosition, label: `${unknownPosition} (${strings.squadPositionLegacyValue})` },
+        ...base,
+      ];
+    }
+    return base;
+  }, [unknownPosition, position]);
 
   return (
     <ModalDialog
@@ -122,32 +153,29 @@ export function SquadPlayerFormModal({ open, onClose, onSaved, mode, player }) {
             disabled={submitting}
             autoComplete="off"
           />
-          <FormField
+          <StarRatingField
             id="squad-player-stars"
             label={strings.squadStars}
-            type="number"
             value={skillStars}
-            onChange={(ev) => setSkillStars(ev.target.value)}
+            onChange={setSkillStars}
             disabled={submitting}
+            hint={strings.squadStarsHint}
           />
           <SelectField
             id="squad-player-profile"
             label={strings.squadProfile}
             value={profile}
-            onChange={(ev) => setProfile(ev.target.value)}
+            onChange={setProfile}
             disabled={submitting}
-          >
-            <option value="attack">{strings.squadProfileAttack}</option>
-            <option value="defense">{strings.squadProfileDefense}</option>
-            <option value="mixed">{strings.squadProfileMixed}</option>
-          </SelectField>
-          <FormField
+            options={SQUAD_PROFILE_OPTIONS}
+          />
+          <SelectField
             id="squad-player-position"
             label={strings.squadPositionOptional}
             value={position}
-            onChange={(ev) => setPosition(ev.target.value)}
+            onChange={setPosition}
             disabled={submitting}
-            placeholder={strings.squadPositionPlaceholder}
+            options={positionSelectOptions}
           />
           {mode === "edit" ? (
             <div className="fm-field fm-field--checkbox">

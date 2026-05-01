@@ -118,7 +118,7 @@ html {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  /* Evita zoom automático estranho de texto no Safari iOS */
+  /* Evita zoom automático estranho de texto no mobile. */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -2191,11 +2191,15 @@ select.fm-select option {
 
 .fm-modal-dialog__body {
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
   padding: var(--space-3);
   flex: 1 1 auto;
   min-height: 0;
+}
+
+@supports (overscroll-behavior: contain) {
+  .fm-modal-dialog__body {
+    overscroll-behavior: contain;
+  }
 }
 
 .fm-modal-dialog__footer {

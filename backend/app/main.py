@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import auth, health, matchday, players, users_admin
 from app.core.config import get_settings
+from app.static_site_mount import mount_static_spa_if_built
 
 
 @asynccontextmanager
@@ -53,3 +54,6 @@ app.include_router(players.router, prefix="/api/v1", tags=["players"])
 app.include_router(matchday.router, prefix="/api/v1", tags=["match-day"])
 app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
 app.include_router(users_admin.router, prefix="/api/v1/super-admin", tags=["super-admin"])
+
+# Último: ficheiros do SPA + fallback para index.html (React Router). Só ativo se existir `backend/static_site/`.
+mount_static_spa_if_built(app)

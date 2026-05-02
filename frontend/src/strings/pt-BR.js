@@ -121,7 +121,7 @@ export const strings = {
   sundayGameSaveBeforeDraw: "Salve as configurações acima antes de sortear.",
   sundayGameStartHold: "Segure para apitar o início do jogo",
   sundayGameStartHoldHint:
-    "Segure o botão: a escalação fica oficial e a partida passa ao vivo (depois pode usar a tela Partida).",
+    "O jogo só entra ao vivo na aba Partida: abra essa tela e segure o botão de apito até completar. Até apitar, pode sortear de novo; depois a escalação fica oficial.",
   matchDayBannerTitle: "Dia de jogo",
   matchDayBannerSubtitle:
     "Janela de domingo na base (a partir das 06:00 no horário do servidor). O sorteio em si pode ser feito em qualquer dia.",
@@ -254,6 +254,7 @@ export const strings = {
   matchLiveAwaitingKickoff:
     "Esta partida ainda não começou. Inicie quando estiver pronto — o cronômetro e o placar só rodam após o início.",
   matchLiveStartMatchCta: "Iniciar partida",
+  matchLiveStartMatchRegionAria: "Iniciar partida — segure o botão até completar para apitar o início",
   matchLiveStartMatchNoPermission: "Apenas organizadores podem dar início à partida.",
   matchLiveCloseDayHold: "Segure para dar fim às partidas do dia.",
   matchDayRuleDuration: "Duração (minutos)",

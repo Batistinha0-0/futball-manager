@@ -1,11 +1,10 @@
 import { useCallback, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuthMe } from "../../hooks/useAuthMe.js";
 import { useMatchDayToday } from "../../hooks/useMatchDayToday.js";
 import { usePlayers } from "../../hooks/usePlayers.js";
 import { strings } from "../../strings/pt-BR.js";
 import { Text } from "../atoms/Text.jsx";
-import { PressHoldButton } from "../atoms/PressHoldButton.jsx";
 import { SundayGameSettingsForm } from "../molecules/SundayGameSettingsForm.jsx";
 import { SundayTeamsSection } from "../molecules/SundayTeamsSection.jsx";
 import { PitchLineup } from "./PitchLineup.jsx";
@@ -17,7 +16,6 @@ function userCanWritePlayers(user) {
 }
 
 export function SundayGameCard() {
-  const navigate = useNavigate();
   const md = useMatchDayToday();
   const { user } = useAuthMe();
   const canWrite = userCanWritePlayers(/** @type {{ permissions?: string[] }} */ (user ?? {}));
@@ -56,7 +54,7 @@ export function SundayGameCard() {
     return pend[0] ?? null;
   }, [fixtures]);
 
-  /** Só após a partida estar ao vivo: antes disso o início é só com “Segure…” na carta (não esconder o sorteio/campo). */
+  /** Só após a partida estar ao vivo — atalho para a tela Partida. O apito inicial é só lá, com segure-até-completar. */
   const showPartidaCta = Boolean(hasLive && liveFx);
 
   /** Data do servidor: o sorteio está disponível em qualquer dia da semana. */
@@ -153,22 +151,14 @@ export function SundayGameCard() {
                 </p>
               ) : null}
               <PitchLineup teams={teams} players={players} />
-              {canWrite && firstPending ? (
+              {firstPending && !hasLive ? (
                 <div className="fm-sunday-game-card__start-hold">
-                  <p className="fm-muted fm-sunday-game-card__start-hint">{strings.sundayGameStartHoldHint}</p>
-                  <PressHoldButton
-                    label={strings.sundayGameStartHold}
-                    onComplete={async () => {
-                      try {
-                        await md.startFixture(String(firstPending.id));
-                        navigate("/partida");
-                      } catch {
-                        /* toast no hook */
-                      }
-                    }}
-                    disabled={md.busy}
-                    variant="primary"
-                  />
+                  <p className="fm-muted fm-sunday-game-card__start-hint" role="status">
+                    {strings.sundayGameStartHoldHint}
+                  </p>
+                  <Link className="fm-btn fm-btn--primary" to="/partida">
+                    {strings.sundayGameLiveCta}
+                  </Link>
                 </div>
               ) : null}
             </>

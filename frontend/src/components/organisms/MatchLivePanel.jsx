@@ -1,7 +1,7 @@
 import { formatMatchClock, formatMatchEventTime } from "../../utils/formatMatchClock.js";
 import { MATCH_SCORE_SEP } from "../../utils/formatMatchScore.js";
 import { strings } from "../../strings/pt-BR.js";
-import { Button } from "../atoms/Button.jsx";
+import { PressHoldButton } from "../atoms/PressHoldButton.jsx";
 import { IconPause } from "../atoms/IconPause.jsx";
 import { IconPlay } from "../atoms/IconPlay.jsx";
 import { IconMatchFinish } from "../atoms/IconMatchFinish.jsx";
@@ -221,15 +221,16 @@ export function MatchLivePanel({
             </p>
           ) : null}
           {showStartMatch && onStartMatch ? (
-            <div className="fm-match-panel__clock-cta" role="region" aria-label={strings.matchLiveStartMatchCta}>
-              <Button
-                type="button"
-                className="fm-btn--primary fm-match-panel__start-match-btn"
-                onClick={onStartMatch}
+            <div className="fm-match-panel__clock-cta" role="region" aria-label={strings.matchLiveStartMatchRegionAria}>
+              <PressHoldButton
+                label={strings.sundayGameStartHold}
+                onComplete={() => {
+                  onStartMatch();
+                }}
                 disabled={startMatchDisabled}
-              >
-                {strings.matchLiveStartMatchCta}
-              </Button>
+                variant="primary"
+                className="fm-match-panel__start-match-btn"
+              />
             </div>
           ) : null}
           {showRingPause || showRingFinish ? (

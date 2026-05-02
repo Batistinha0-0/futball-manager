@@ -568,7 +568,8 @@ body {
   box-sizing: border-box;
 }
 
-.fm-match-panel__start-match-btn.fm-btn {
+.fm-match-panel__start-match-btn.fm-btn,
+.fm-match-panel__start-match-btn.fm-press-hold {
   width: 100%;
   box-sizing: border-box;
   justify-content: center;

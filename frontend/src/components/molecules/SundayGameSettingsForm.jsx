@@ -195,6 +195,7 @@ export function SundayGameSettingsForm({
             <span className="fm-sunday-settings__label">{strings.sundayGameDurationMin}</span>
             <input
               type="number"
+              inputMode="numeric"
               min={1}
               max={60}
               value={minutes}
@@ -206,6 +207,7 @@ export function SundayGameSettingsForm({
             <span className="fm-sunday-settings__label">{strings.sundayGameMaxGoals}</span>
             <input
               type="number"
+              inputMode="numeric"
               min={0}
               max={20}
               value={maxGoals}
@@ -217,6 +219,7 @@ export function SundayGameSettingsForm({
             <span className="fm-sunday-settings__label">{strings.sundayGameTeamCount}</span>
             <input
               type="number"
+              inputMode="numeric"
               min={2}
               max={12}
               value={teamCount}
@@ -228,6 +231,7 @@ export function SundayGameSettingsForm({
             <span className="fm-sunday-settings__label">{strings.sundayGamePlayersPerTeam}</span>
             <input
               type="number"
+              inputMode="numeric"
               min={1}
               max={20}
               value={ppt}

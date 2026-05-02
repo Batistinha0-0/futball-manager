@@ -13,14 +13,17 @@ export function Input({
   "aria-label": ariaLabel,
   className = "",
   disabled = false,
+  inputMode,
   ...rest
 }) {
+  const effectiveInputMode = inputMode ?? (type === "number" ? "numeric" : undefined);
   return (
     <input
       {...rest}
       id={id}
       name={name}
       type={type}
+      {...(effectiveInputMode != null ? { inputMode: effectiveInputMode } : {})}
       value={value}
       onChange={onChange}
       placeholder={placeholder}

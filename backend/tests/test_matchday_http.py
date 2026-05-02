@@ -139,9 +139,19 @@ def test_match_day_draw_start_goal_finish_flow(client: TestClient) -> None:
     )
     assert ev2.status_code == 200
 
+    slot1_pid = next(t["player_ids"][0] for t in d["session"]["teams"] if t["slot"] == 1)
+    ev3 = client.post(
+        f"/api/v1/match-day/today/fixtures/{fid}/events",
+        json={"type": "yellow_card", "team_slot": 1, "player_id": slot1_pid},
+    )
+    assert ev3.status_code == 200
+    assert ev3.json()["session"]["fixtures"][0]["home_goals"] == 1
+
     listed = client.get(f"/api/v1/match-day/today/fixtures/{fid}/events")
     assert listed.status_code == 200
-    assert len(listed.json()) == 2
+    types = {e["type"] for e in listed.json()}
+    assert types == {"goal", "goalkeeper_save", "yellow_card"}
+    assert len(listed.json()) == 3
 
     finish = client.post(f"/api/v1/match-day/today/fixtures/{fid}/finish")
     assert finish.status_code == 200
@@ -201,11 +211,17 @@ def test_match_day_fixed_goalkeepers_three_teams_gol_a(client: TestClient) -> No
     )
     dr = client.post("/api/v1/match-day/today/draw")
     assert dr.status_code == 200, dr.text
-    teams = dr.json()["session"]["teams"]
+    sess = dr.json()["session"]
+    teams = sess["teams"]
     by_slot = {t["slot"]: t["player_ids"] for t in teams}
     on_field = {pid for t in teams for pid in t["player_ids"]}
     assert g1 in on_field
     assert len(by_slot[1]) == len(by_slot[2]) == len(by_slot[3]) == 2
+    assert len(sess["fixtures"]) == 1
+    kq = sess.get("king_queue")
+    assert kq is not None
+    assert kq["queue"] == [3]
+    assert kq["win_streak"]["1"] == 0
 
 
 def test_match_day_consecutive_draws_differ_from_previous(client: TestClient) -> None:
@@ -271,3 +287,89 @@ def test_match_day_fixed_goalkeeper_single_gol_a(client: TestClient) -> None:
     on_field = {pid for t in teams for pid in t["player_ids"]}
     assert g1 in on_field
     assert len(by_slot[1]) == len(by_slot[2]) == 2
+
+
+def test_king_mode_assist_after_goal_cap_finishes_submatch(client: TestClient) -> None:
+    """Último golo encerra o subjogo (fixture finished); o cliente ainda envia assist no mesmo fixture_id."""
+    _login(client)
+    _create_player(client, "K1", 4.0)
+    _create_player(client, "K2", 3.5)
+    _create_player(client, "K3", 3.0)
+    client.patch(
+        "/api/v1/match-day/today/settings",
+        json={
+            "team_count": 3,
+            "players_per_team": 1,
+            "default_match_duration_seconds": 420,
+            "default_max_goals_per_team": 2,
+        },
+    )
+    dr = client.post("/api/v1/match-day/today/draw")
+    assert dr.status_code == 200, dr.text
+    fx0 = dr.json()["session"]["fixtures"][0]
+    fid = fx0["id"]
+    home_slot = int(fx0["home_team_slot"])
+    away_slot = int(fx0["away_team_slot"])
+    assert client.post(f"/api/v1/match-day/today/fixtures/{fid}/start").status_code == 200
+
+    assert (
+        client.post(
+            f"/api/v1/match-day/today/fixtures/{fid}/events",
+            json={"type": "goal", "team_slot": home_slot, "elapsed_seconds": 1},
+        ).status_code
+        == 200
+    )
+    g2 = client.post(
+        f"/api/v1/match-day/today/fixtures/{fid}/events",
+        json={"type": "goal", "team_slot": home_slot, "elapsed_seconds": 2},
+    )
+    assert g2.status_code == 200, g2.text
+    fixtures = g2.json()["session"]["fixtures"]
+    first = next(f for f in fixtures if f["id"] == fid)
+    assert first["status"] == "finished"
+
+    assist_pid = next(
+        t["player_ids"][0] for t in g2.json()["session"]["teams"] if int(t["slot"]) == home_slot
+    )
+    asst = client.post(
+        f"/api/v1/match-day/today/fixtures/{fid}/events",
+        json={
+            "type": "assist",
+            "team_slot": home_slot,
+            "player_id": assist_pid,
+            "elapsed_seconds": 2,
+        },
+    )
+    assert asst.status_code == 200, asst.text
+
+    goal_after = client.post(
+        f"/api/v1/match-day/today/fixtures/{fid}/events",
+        json={"type": "goal", "team_slot": home_slot, "elapsed_seconds": 3},
+    )
+    assert goal_after.status_code == 400
+
+
+def test_draw_again_after_all_fixtures_finished_two_teams(client: TestClient) -> None:
+    """Rodada concluída (2 times): novo sorteio deve funcionar ao voltar para o mesmo dia."""
+    _login(client)
+    _create_player(client, "R1", 4.0)
+    _create_player(client, "R2", 3.5)
+    client.patch(
+        "/api/v1/match-day/today/settings",
+        json={"team_count": 2, "players_per_team": 1, "default_match_duration_seconds": 420},
+    )
+    dr = client.post("/api/v1/match-day/today/draw")
+    assert dr.status_code == 200, dr.text
+    fid = dr.json()["session"]["fixtures"][0]["id"]
+    assert client.post(f"/api/v1/match-day/today/fixtures/{fid}/start").status_code == 200
+    assert client.post(f"/api/v1/match-day/today/fixtures/{fid}/finish").status_code == 200
+    today = client.get("/api/v1/match-day/today").json()
+    assert today["session"]["fixtures"][0]["status"] == "finished"
+    assert today["session"]["lineup_official"] is True
+
+    again = client.post("/api/v1/match-day/today/draw")
+    assert again.status_code == 200, again.text
+    sess = again.json()["session"]
+    assert sess["lineup_official"] is False
+    assert len(sess["fixtures"]) == 1
+    assert sess["fixtures"][0]["status"] == "pending"

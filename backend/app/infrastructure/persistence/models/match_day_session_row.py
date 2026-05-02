@@ -36,3 +36,6 @@ class MatchDaySessionRow(Base):
     draft_teams_json: Mapped[str | None] = mapped_column(Text(), nullable=True)
     lineup_committed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     draw_signatures_json: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    king_state_json: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    day_summary_json: Mapped[str | None] = mapped_column(Text(), nullable=True)

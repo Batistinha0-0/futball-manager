@@ -9,7 +9,7 @@ from app.domain.matchday.enums import MatchFixtureStatus
 
 
 def snake_pick_order(team_count: int, total_picks: int) -> list[int]:
-    """Índices de equipa 0..team_count-1 em ordem snake (uma vaga por pick)."""
+    """Índices de time 0..team_count-1 em ordem snake (uma vaga por pick)."""
     out: list[int] = []
     for pick in range(total_picks):
         row = pick // team_count
@@ -39,7 +39,13 @@ def build_fixtures_for_session(
     duration_seconds: int,
     max_goals_per_team: int,
 ) -> list[MatchDayFixture]:
-    pairs = round_robin_pairs(team_count)
+    """Dois times: um jogo. Mais de dois: fila (sempre começa 1×2); próximos confrontos são criados ao vivo."""
+    if team_count < 2:
+        return []
+    if team_count == 2:
+        pairs = [(1, 2)]
+    else:
+        pairs = [(1, 2)]
     out: list[MatchDayFixture] = []
     for idx, (home, away) in enumerate(pairs):
         out.append(

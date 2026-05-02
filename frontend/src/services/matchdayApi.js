@@ -1,30 +1,47 @@
 import { apiGet, apiPatch, apiPost } from "./apiClient.js";
 
-/** @returns {Promise<Record<string, unknown>>} */
-export function getMatchDayToday() {
-  return apiGet("/api/v1/match-day/today");
+/** @param {string | null | undefined} sessionDate */
+function sessionDateSuffix(sessionDate) {
+  if (!sessionDate) return "";
+  return `?session_date=${encodeURIComponent(sessionDate)}`;
 }
 
-/** @returns {Promise<Record<string, unknown>>} */
-export function postMatchDayDraw() {
-  return apiPost("/api/v1/match-day/today/draw", {});
+/** @returns {Promise<Record<string, unknown>[]>} */
+export function getMatchDayRecentSessions() {
+  return apiGet("/api/v1/match-day/recent-sessions");
 }
 
 /**
- * @param {{
- *   default_match_duration_seconds?: number,
- *   default_max_goals_per_team?: number,
- *   team_count?: number,
- *   players_per_team?: number,
- *   fixed_goalkeepers_enabled?: boolean,
- *   fixed_goalkeeper_player_id_1?: string | null,
- *   fixed_goalkeeper_player_id_2?: string | null,
- *   phase?: string,
- * }} patch
+ * @param {string | null | undefined} [sessionDate] YYYY-MM-DD; omitir = hoje no servidor
  * @returns {Promise<Record<string, unknown>>}
  */
-export function patchMatchDayTodaySettings(patch) {
-  return apiPatch("/api/v1/match-day/today/settings", patch);
+export function getMatchDayToday(sessionDate) {
+  return apiGet(`/api/v1/match-day/today${sessionDateSuffix(sessionDate)}`);
+}
+
+/**
+ * @param {string | null | undefined} [sessionDate]
+ * @returns {Promise<Record<string, unknown>>}
+ */
+export function postMatchDayDraw(sessionDate) {
+  return apiPost(`/api/v1/match-day/today/draw${sessionDateSuffix(sessionDate)}`, {});
+}
+
+/**
+ * @param {string | null | undefined} [sessionDate]
+ * @returns {Promise<Record<string, unknown>>}
+ */
+export function postCloseMatchDay(sessionDate) {
+  return apiPost(`/api/v1/match-day/today/close-day${sessionDateSuffix(sessionDate)}`, {});
+}
+
+/**
+ * @param {Record<string, unknown>} patch
+ * @param {string | null | undefined} [sessionDate]
+ * @returns {Promise<Record<string, unknown>>}
+ */
+export function patchMatchDayTodaySettings(patch, sessionDate) {
+  return apiPatch(`/api/v1/match-day/today/settings${sessionDateSuffix(sessionDate)}`, patch);
 }
 
 /** @param {string} fixtureId @returns {Promise<Record<string, unknown>>} */
@@ -37,9 +54,14 @@ export function postFixtureFinish(fixtureId) {
   return apiPost(`/api/v1/match-day/today/fixtures/${encodeURIComponent(fixtureId)}/finish`, {});
 }
 
+/** @param {string} fixtureId @returns {Promise<Record<string, unknown>>} */
+export function postFixtureTimeExpired(fixtureId) {
+  return apiPost(`/api/v1/match-day/today/fixtures/${encodeURIComponent(fixtureId)}/time-expired`, {});
+}
+
 /**
  * @param {string} fixtureId
- * @param {{ type: string, team_slot: number, player_id?: string | null, elapsed_seconds?: number | null }} body
+ * @param {{ type: "goal"|"goalkeeper_save"|"assist"|"yellow_card"|"red_card", team_slot: number, player_id?: string | null, elapsed_seconds?: number | null }} body
  * @returns {Promise<Record<string, unknown>>}
  */
 export function postFixtureEvent(fixtureId, body) {

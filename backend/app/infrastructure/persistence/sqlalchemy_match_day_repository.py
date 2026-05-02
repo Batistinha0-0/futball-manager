@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import date, datetime, timezone
 from uuid import UUID
 
@@ -9,12 +10,15 @@ from app.domain.matchday.entities import (
     MatchDaySession,
     MatchDayTeam,
     MatchEvent,
+    PlayerMatchDayStat,
 )
 from app.domain.matchday.enums import MatchDayPhase, MatchEventType, MatchFixtureStatus
+from app.domain.matchday.session_summary import MatchDaySessionSummary
 from app.infrastructure.persistence.models.match_day_fixture_row import MatchDayFixtureRow
 from app.infrastructure.persistence.models.match_day_session_row import MatchDaySessionRow
 from app.infrastructure.persistence.models.match_day_team_row import MatchDayTeamRow
 from app.infrastructure.persistence.models.match_event_row import MatchEventRow
+from app.infrastructure.persistence.models.player_match_day_stat_row import PlayerMatchDayStatRow
 from app.ports.match_day_repository import MatchDayRepository
 
 
@@ -45,6 +49,9 @@ def _session_from_row(r: MatchDaySessionRow) -> MatchDaySession:
         draft_teams_json=r.draft_teams_json,
         lineup_committed_at=r.lineup_committed_at,
         draw_signatures_json=r.draw_signatures_json,
+        king_state_json=r.king_state_json,
+        closed_at=r.closed_at,
+        day_summary_json=r.day_summary_json,
     )
 
 
@@ -102,6 +109,30 @@ class SqlAlchemyMatchDayRepository(MatchDayRepository):
         ).first()
         return _session_from_row(row) if row else None
 
+    def list_session_summaries_between(self, start: date, end: date) -> list[MatchDaySessionSummary]:
+        rows = self._s.scalars(
+            select(MatchDaySessionRow)
+            .where(
+                MatchDaySessionRow.session_date >= start,
+                MatchDaySessionRow.session_date <= end,
+            )
+            .order_by(MatchDaySessionRow.session_date.desc())
+        ).all()
+        result: list[MatchDaySessionSummary] = []
+        for r in rows:
+            ua = r.updated_at
+            if ua.tzinfo is None:
+                ua = ua.replace(tzinfo=timezone.utc)
+            result.append(
+                MatchDaySessionSummary(
+                    session_date=r.session_date,
+                    phase=r.phase,
+                    updated_at=ua,
+                    has_draft=bool(r.draft_teams_json),
+                )
+            )
+        return result
+
     def save_session(self, session: MatchDaySession) -> None:
         uid = _sid(session.id)
         row = self._s.get(MatchDaySessionRow, uid)
@@ -128,6 +159,9 @@ class SqlAlchemyMatchDayRepository(MatchDayRepository):
                 draft_teams_json=session.draft_teams_json,
                 lineup_committed_at=session.lineup_committed_at,
                 draw_signatures_json=session.draw_signatures_json,
+                king_state_json=session.king_state_json,
+                closed_at=session.closed_at,
+                day_summary_json=session.day_summary_json,
             )
             self._s.add(row)
         else:
@@ -149,7 +183,10 @@ class SqlAlchemyMatchDayRepository(MatchDayRepository):
             row.draft_teams_json = session.draft_teams_json
             row.lineup_committed_at = session.lineup_committed_at
             row.draw_signatures_json = session.draw_signatures_json
-        # Garantir INSERT/UPDATE da sessão antes de filhos (equipas/fixtures) no mesmo flush/commit —
+            row.king_state_json = session.king_state_json
+            row.closed_at = session.closed_at
+            row.day_summary_json = session.day_summary_json
+        # Garantir INSERT/UPDATE da sessão antes de filhos (times/fixtures) no mesmo flush/commit —
         # sem relationship FK, o SQLAlchemy pode ordenar INSERTs por nome de tabela e violar FK no Postgres.
         self._s.flush()
 
@@ -268,3 +305,21 @@ class SqlAlchemyMatchDayRepository(MatchDayRepository):
                 elapsed_seconds=event.elapsed_seconds,
             )
         )
+
+    def replace_player_match_day_stats(self, session_id: str, rows: Sequence[PlayerMatchDayStat]) -> None:
+        uid = _sid(session_id)
+        self._s.execute(delete(PlayerMatchDayStatRow).where(PlayerMatchDayStatRow.session_id == uid))
+        for r in rows:
+            self._s.add(
+                PlayerMatchDayStatRow(
+                    session_id=uid,
+                    player_id=_sid(r.player_id),
+                    goals=r.goals,
+                    assists=r.assists,
+                    goalkeeper_saves=r.goalkeeper_saves,
+                    yellow_cards=r.yellow_cards,
+                    red_cards=r.red_cards,
+                    fixtures_played=r.fixtures_played,
+                )
+            )
+        self._s.flush()

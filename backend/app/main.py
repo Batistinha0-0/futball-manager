@@ -55,5 +55,5 @@ app.include_router(matchday.router, prefix="/api/v1", tags=["match-day"])
 app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
 app.include_router(users_admin.router, prefix="/api/v1/super-admin", tags=["super-admin"])
 
-# Último: ficheiros do SPA + fallback para index.html (React Router). Só ativo se existir `backend/static_site/`.
+# Último: arquivos do SPA + fallback para index.html (React Router). Só ativo se existir `backend/static_site/`.
 mount_static_spa_if_built(app)

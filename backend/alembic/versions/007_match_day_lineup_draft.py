@@ -1,4 +1,4 @@
-"""Sessão: rascunho de equipas + confirmação ao apitar o início.
+"""Sessão: rascunho dos times + confirmação ao iniciar a partida.
 
 Revision ID: 007
 Revises: 006

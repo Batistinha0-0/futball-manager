@@ -25,6 +25,22 @@ class MatchDaySession:
     draft_teams_json: str | None = None
     lineup_committed_at: datetime | None = None
     draw_signatures_json: str | None = None
+    king_state_json: str | None = None
+    closed_at: datetime | None = None
+    day_summary_json: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PlayerMatchDayStat:
+    """Agregado persistido por sessão/jogador (espelha `player_match_day_stats`)."""
+
+    player_id: str
+    goals: int
+    assists: int
+    goalkeeper_saves: int
+    yellow_cards: int
+    red_cards: int
+    fixtures_played: int
 
 
 @dataclass(frozen=True, slots=True)

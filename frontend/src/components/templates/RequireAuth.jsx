@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { strings } from "../../strings/pt-BR.js";
 import { fetchCurrentUser } from "../../services/authApi.js";
+import { LoadingBlock } from "../molecules/LoadingBlock.jsx";
 
 /**
  * Garante sessão válida (GET /auth/me; refresh automático via apiClient).
@@ -32,7 +33,7 @@ export function RequireAuth() {
   if (phase !== "ok") {
     return (
       <div className="fm-auth-check">
-        <p className="fm-muted">{strings.authChecking}</p>
+        <LoadingBlock message={strings.authChecking} spinnerSize="lg" />
       </div>
     );
   }

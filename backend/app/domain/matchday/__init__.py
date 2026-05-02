@@ -1,4 +1,4 @@
-"""Domínio: sessão de domingo, equipas, partidas e eventos."""
+"""Domínio: sessão de domingo, times, partidas e eventos."""
 
 from app.domain.matchday.entities import (
     MatchDayFixture,

@@ -116,7 +116,7 @@ export function SquadPlayerSheetModal({ open, player, onClose, onUpdated }) {
           <Button type="button" onClick={onClose} disabled={metaSubmitting}>
             {strings.squadPlayerSheetClose}
           </Button>
-          <Button type="button" onClick={requestSaveMeta} disabled={!metaDirty || metaSubmitting}>
+          <Button type="button" onClick={requestSaveMeta} disabled={!metaDirty} loading={metaSubmitting}>
             {metaSubmitting ? strings.squadPlayerSheetMetaSaving : strings.squadPlayerSheetSaveMeta}
           </Button>
         </div>

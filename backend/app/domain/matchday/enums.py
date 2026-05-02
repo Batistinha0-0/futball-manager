@@ -16,3 +16,6 @@ class MatchFixtureStatus(str, Enum):
 class MatchEventType(str, Enum):
     GOAL = "goal"
     GOALKEEPER_SAVE = "goalkeeper_save"
+    ASSIST = "assist"
+    YELLOW_CARD = "yellow_card"
+    RED_CARD = "red_card"

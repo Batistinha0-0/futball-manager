@@ -1,4 +1,5 @@
 import { strings } from "../../strings/pt-BR.js";
+import { Button } from "../atoms/Button.jsx";
 
 /**
  * @param {{
@@ -15,10 +16,10 @@ export function SundayDrawWizard({ canWrite, hasSession, busy, onDraw }) {
 
   return (
     <div className="fm-matchday-draw">
-      <button
+      <Button
         type="button"
-        className="fm-btn"
         disabled={busy}
+        loading={busy}
         onClick={async () => {
           if (hasSession) {
             const ok = window.confirm(strings.matchDayRedrawConfirm);
@@ -28,7 +29,7 @@ export function SundayDrawWizard({ canWrite, hasSession, busy, onDraw }) {
         }}
       >
         {hasSession ? strings.matchDayRedraw : strings.matchDayDraw}
-      </button>
+      </Button>
     </div>
   );
 }

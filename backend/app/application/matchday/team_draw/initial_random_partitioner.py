@@ -1,4 +1,4 @@
-"""Partição inicial aleatória em N equipas com P jogadores cada."""
+"""Partição inicial aleatória em N times com P jogadores cada."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ class InitialRandomPartitioner:
         if len(pool) < need:
             raise ValidationError(
                 "match_day_not_enough_players",
-                f"São necessários pelo menos {need} jogadores ativos no sorteio (equipas × jogadores por equipa).",
+                f"São necessários pelo menos {need} jogadores ativos no sorteio (times × jogadores por time).",
             )
         shuffled = list(pool)
         rng.shuffle(shuffled)
@@ -31,5 +31,5 @@ class InitialRandomPartitioner:
             buckets[idx % team_count].append(p.id)
         for t in range(team_count):
             if len(buckets[t]) != players_per_team:
-                raise ValidationError("match_day_draw_split", "Não foi possível preencher todas as equipas.")
+                raise ValidationError("match_day_draw_split", "Não foi possível preencher todos os times.")
         return buckets

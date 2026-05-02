@@ -65,7 +65,7 @@ export function LoginForm() {
           />
         </div>
         <div className="fm-login__actions">
-          <Button type="submit" className="fm-login__submit" disabled={loading}>
+          <Button type="submit" className="fm-login__submit" loading={loading}>
             {loading ? strings.loginSubmitting : strings.loginSubmit}
           </Button>
         </div>

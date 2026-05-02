@@ -11,11 +11,28 @@ import { Text } from "../atoms/Text.jsx";
  *   title: string,
  *   children: import("react").ReactNode,
  *   footer?: import("react").ReactNode,
+ *   dismissOnBackdrop?: boolean,
+ *   dismissOnEscape?: boolean,
  * }} props
  */
-export function ModalDialog({ open, onClose, titleId, title, children, footer }) {
+export function ModalDialog({
+  open,
+  onClose,
+  titleId,
+  title,
+  children,
+  footer,
+  dismissOnBackdrop = true,
+  dismissOnEscape = true,
+}) {
   return (
-    <Modal open={open} onClose={onClose} labelledBy={titleId}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      labelledBy={titleId}
+      dismissOnBackdrop={dismissOnBackdrop}
+      dismissOnEscape={dismissOnEscape}
+    >
       <div className="fm-modal-dialog">
         <header className="fm-modal-dialog__header">
           <Text as="h2" id={titleId} className="fm-modal-dialog__title">

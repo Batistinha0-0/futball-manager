@@ -99,7 +99,7 @@ export function SquadPlayerFormModal({ open, onClose, onSaved }) {
           <Button type="button" onClick={onClose} disabled={submitting}>
             {strings.usersAdminCancel}
           </Button>
-          <Button type="submit" form="squad-player-form" disabled={submitting}>
+          <Button type="submit" form="squad-player-form" loading={submitting}>
             {submitting ? strings.usersAdminSaving : strings.squadFormSave}
           </Button>
         </div>

@@ -65,7 +65,7 @@ def test_assign_expected_sizes_no_fixed() -> None:
 
 
 def test_fixed_one_gk_participates_in_draw() -> None:
-    """Um só GR fixo: permanece no pool e pode ir para qualquer equipa."""
+    """Um só GR fixo: permanece no pool e pode ir para qualquer time."""
     g1 = str(uuid.uuid4())
     p2 = str(uuid.uuid4())
     p3 = str(uuid.uuid4())

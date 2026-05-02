@@ -4,9 +4,9 @@ import { ToastItem } from "../components/molecules/ToastItem.jsx";
 
 const MAX_TOASTS = 3;
 
-/** @typedef {{ id: string, message: string, variant: "success" | "error" | "info", duration: number }} ToastRecord */
+/** @typedef {{ id: string, message: string, variant: "success" | "error" | "info" | "warning", duration: number }} ToastRecord */
 
-/** @type {import("react").Context<{ showToast: (opts: { message: string, variant?: "success" | "error" | "info", duration?: number }) => string, dismissToast: (id: string) => void } | null>} */
+/** @type {import("react").Context<{ showToast: (opts: { message: string, variant?: "success" | "error" | "info" | "warning", duration?: number }) => string, dismissToast: (id: string) => void } | null>} */
 const ToastContext = createContext(null);
 
 /**

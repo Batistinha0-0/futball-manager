@@ -1,6 +1,7 @@
-"""Persistência da sessão de domingo (equipas, partidas, eventos)."""
+"""Persistência da sessão de domingo (times, partidas, eventos)."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from datetime import date
 
 from app.domain.matchday.entities import (
@@ -8,7 +9,9 @@ from app.domain.matchday.entities import (
     MatchDaySession,
     MatchDayTeam,
     MatchEvent,
+    PlayerMatchDayStat,
 )
+from app.domain.matchday.session_summary import MatchDaySessionSummary
 
 
 class MatchDayRepository(ABC):
@@ -18,6 +21,11 @@ class MatchDayRepository(ABC):
 
     @abstractmethod
     def get_session_by_date(self, session_date: date) -> MatchDaySession | None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def list_session_summaries_between(self, start: date, end: date) -> list[MatchDaySessionSummary]:
+        """Sessões com `session_date` em [start, end], ordenadas por data descendente."""
         raise NotImplementedError
 
     @abstractmethod
@@ -31,7 +39,7 @@ class MatchDayRepository(ABC):
 
     @abstractmethod
     def clear_teams_and_fixtures(self, session_id: str) -> None:
-        """Remove equipas e partidas (mantém a sessão e configurações)."""
+        """Remove times e partidas (mantém a sessão e configurações)."""
         raise NotImplementedError
 
     @abstractmethod
@@ -64,4 +72,9 @@ class MatchDayRepository(ABC):
 
     @abstractmethod
     def append_event(self, event: MatchEvent) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def replace_player_match_day_stats(self, session_id: str, rows: Sequence[PlayerMatchDayStat]) -> None:
+        """Substitui todas as linhas agregadas da sessão (idempotente no encerramento do dia)."""
         raise NotImplementedError

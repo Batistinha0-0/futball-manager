@@ -1,4 +1,4 @@
-"""Reduz concentração de perfis attack/defense na mesma equipa (mixed é neutro)."""
+"""Reduz concentração de perfis attack/defense no mesmo time (mixed é neutro)."""
 
 from __future__ import annotations
 

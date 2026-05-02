@@ -1,5 +1,6 @@
 import { strings } from "../../strings/pt-BR.js";
 import { Button } from "../atoms/Button.jsx";
+import { LoadingBlock } from "../molecules/LoadingBlock.jsx";
 
 function roleLabel(role) {
   if (role === "super_admin") return strings.usersAdminRoleSuperAdmin;
@@ -21,7 +22,7 @@ export function SuperAdminUsersTable({ users, loading, listError, onEdit, onDele
   return (
     <div className="fm-users-admin-table">
       {loading ? (
-        <p className="fm-muted">{strings.apiStatusChecking}</p>
+        <LoadingBlock message={strings.apiStatusChecking} centered={false} />
       ) : listError ? (
         <p className="fm-muted">{strings.usersAdminListError}</p>
       ) : users.length === 0 ? (

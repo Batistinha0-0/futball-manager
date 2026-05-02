@@ -62,7 +62,7 @@ export function SuperAdminUserCreateModal({ open, onClose, onCreated }) {
           <Button type="button" onClick={onClose} disabled={submitting}>
             {strings.usersAdminCancel}
           </Button>
-          <Button type="submit" form="sa-create-user-form" disabled={submitting}>
+          <Button type="submit" form="sa-create-user-form" loading={submitting}>
             {submitting ? strings.usersAdminSaving : strings.usersAdminCreateSubmit}
           </Button>
         </div>

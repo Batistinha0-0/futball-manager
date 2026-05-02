@@ -41,9 +41,9 @@ class TeamDrawApplicationService:
         rng: random.Random | None = None,
     ) -> list[tuple[int, tuple[str, ...]]]:
         if team_count < 2 or team_count > 12:
-            raise ValidationError("match_day_bad_team_count", "Número de equipas deve estar entre 2 e 12.")
+            raise ValidationError("match_day_bad_team_count", "Número de times deve estar entre 2 e 12.")
         if players_per_team < 1 or players_per_team > 20:
-            raise ValidationError("match_day_bad_roster_size", "Jogadores por equipa deve estar entre 1 e 20.")
+            raise ValidationError("match_day_bad_roster_size", "Jogadores por time deve estar entre 1 e 20.")
 
         participation = self._gk_rule.build_pool(
             players=players,
@@ -56,7 +56,7 @@ class TeamDrawApplicationService:
         if len(pool) < need:
             raise ValidationError(
                 "match_day_not_enough_players",
-                f"São necessários pelo menos {need} jogadores ativos no sorteio (equipas × jogadores por equipa).",
+                f"São necessários pelo menos {need} jogadores ativos no sorteio (times × jogadores por time).",
             )
 
         use_rng = rng if rng is not None else self._rng

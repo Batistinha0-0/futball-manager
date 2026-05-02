@@ -36,6 +36,6 @@ npm run dev
 4. **SPA (obrigatório):** no painel do site estático, abra **Redirects / Rewrites** e adicione uma regra **Rewrite**:
    - **Source:** `/*`
    - **Destination:** `/index.html`  
-   Sem isto, rotas como `/elenco` devolvem 404 do CDN (página sem o bundle React/CSS — o site parece “sem estilização”).
+   Sem isso, rotas como `/elenco` devolvem 404 do CDN (página sem o bundle React/CSS — o site parece “sem estilização”).
 
-O `vite.config.js` usa `base: './'` para os ficheiros em `dist/assets/` carregarem com URLs relativas ao `index.html`.
+O `vite.config.js` usa `base: './'` para os arquivos em `dist/assets/` carregarem com URLs relativas ao `index.html`.

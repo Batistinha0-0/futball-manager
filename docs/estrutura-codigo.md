@@ -2,7 +2,7 @@
 
 Este documento define **como organizar o repositório** para o produto descrito no [README](../README.md): mobile-first, só organizadores, base de jogadores, sessões de domingo flexíveis, sorteio com histórico e goleiro inicial.
 
-## Stack actual (monorepo)
+## Stack atual (monorepo)
 
 | Pacote | Tecnologia | Pastas principais |
 | ------ | ---------- | ------------------ |
@@ -11,7 +11,7 @@ Este documento define **como organizar o repositório** para o produto descrito 
 
 A estrutura prioriza **fronteiras claras** entre domínio, casos de uso, dados e interface; o backend segue **SOLID** (Protocol + injeção via `Depends`); o front segue **Atomic Design** (ver [`frontend/README.md`](../frontend/README.md)).
 
-**Idioma:** ver [Convenções de idioma](#convenções-de-idioma-código-em-inglês-app-em-pt-br) — **inglês** no código; **pt-BR** na experiência do utilizador.
+**Idioma:** ver [Convenções de idioma](#convenções-de-idioma-código-em-inglês-app-em-pt-br) — **inglês** no código; **pt-BR** na experiência do usuário.
 
 ---
 
@@ -19,10 +19,10 @@ A estrutura prioriza **fronteiras claras** entre domínio, casos de uso, dados e
 
 1. **Domínio puro** — regras de negócio (estrelas, perfis, validação de sessão, lógica de sorteio, “time parecido”) em módulos **sem** dependência de framework UI nem de HTTP/SDK concretos.
 2. **Casos de uso explícitos** — cada fluxo relevante é uma função ou módulo pequeno em **inglês** (ex.: `createPlayer`, `setSessionAttendance`, `runDraw`) que orquestra domínio + persistência através de **portas** (interfaces).
-3. **Persistência atrás de adaptadores** — o domínio não sabe se os dados vêm de IndexedDB, Supabase ou API; só conhece repositórios / gateways definidos por ti.
-4. **UI fina** — páginas e componentes apenas recolhem input, chamam casos de uso e mostram estado; **sem** duplicar regras de sorteio ou validação de jogador nas telas.
+3. **Persistência atrás de adaptadores** — o domínio não sabe se os dados vêm de IndexedDB, Supabase ou API; só conhece repositórios / gateways definidos por você.
+4. **UI fina** — páginas e componentes apenas coletam entrada, chamam casos de uso e mostram estado; **sem** duplicar regras de sorteio ou validação de jogador nas telas.
 5. **Sorteio testável** — algoritmo de formação de times e goleiro inicial com **entrada/saída bem definidas** (Pydantic / tipos no domínio) e testes unitários **sem** base de dados real.
-6. **Produto em pt-BR** — tudo o que o utilizador **lê** na app está em **português do Brasil**; formatação de data/número com locale **`pt-BR`**.
+6. **Produto em pt-BR** — tudo o que o usuário **lê** na app está em **português do Brasil**; formatação de data/número com locale **`pt-BR`**.
 
 ---
 
@@ -30,26 +30,26 @@ A estrutura prioriza **fronteiras claras** entre domínio, casos de uso, dados e
 
 | O quê | Idioma |
 | ----- | ------ |
-| Pastas, ficheiros, módulos | **Inglês** (`player/`, `run_draw.py`, `HomePage.jsx`) |
+| Pastas, arquivos, módulos | **Inglês** (`player/`, `run_draw.py`, `HomePage.jsx`) |
 | Funções, variáveis, tipos, enums de código | **Inglês** (`starting_goalkeeper`, `DrawInput`) |
 | Rotas HTTP internas, handlers, tabelas/colunas em código | **Inglês** (ex.: `/api/sessions`, `player_id`) |
 | Commits e comentários no código | **Inglês** (recomendado) |
 | Textos na interface, toasts, validação visível, e-mails/SMS | **pt-BR** (catálogo dedicado) |
 | Códigos de erro para a UI mapear | **Inglês** estável (ex.: `STARS_OUT_OF_RANGE`) → mensagem **pt-BR** no mapa de strings |
 
-O repositório pode ter documentação em português (como este ficheiro); o **código-fonte** segue **inglês** de ponta a ponta, e o **comportamento do produto** é o de uma app **brasileira** (`lang="pt-BR"`, `Intl` `pt-BR`, cópias só em pt-BR).
+O repositório pode ter documentação em português (como este arquivo); o **código-fonte** segue **inglês** de ponta a ponta, e o **comportamento do produto** é o de uma app **brasileira** (`lang="pt-BR"`, `Intl` `pt-BR`, cópias só em pt-BR).
 
 ---
 
 ## Locale e textos (pt-BR) — só na camada de produto
 
 - **`lang="pt-BR"`** no HTML raiz da aplicação.
-- **Cadeias de UI:** [`frontend/src/strings/pt-BR.js`](../frontend/src/strings/pt-BR.js) (ou JSON equivalente). O **nome do ficheiro** pode incluir `pt-BR`; o **conteúdo** é português do Brasil. Biblioteca i18n opcional com **locale por defeito `pt-BR`**.
+- **Cadeias de UI:** [`frontend/src/strings/pt-BR.js`](../frontend/src/strings/pt-BR.js) (ou JSON equivalente). O **nome do arquivo** pode incluir `pt-BR`; o **conteúdo** é português do Brasil. Biblioteca i18n opcional com **locale padrão `pt-BR`**.
 - **Domínio:** preferir devolver **códigos** em inglês (`STARS_OUT_OF_RANGE`) e traduzir na UI; evita mensagens em inglês na tela e mantém o domínio sem literais em português espalhados.
 - **`Intl`:** `Intl.DateTimeFormat('pt-BR')`, `Intl.NumberFormat('pt-BR')`, etc.
 - **Testes:** asserts sobre texto apresentado esperam **pt-BR**; testes de domínio podem usar códigos em inglês.
 
-Isto cumpre o README: **código em inglês**, **app estruturada como produto em português do Brasil**.
+Isso cumpre o README: **código em inglês**, **app estruturada como produto em português do Brasil**.
 
 ---
 
@@ -71,7 +71,7 @@ Fluxo de dependência: **UI → aplicação → domínio**; **infra implementa i
 
 ---
 
-## Árvore de pastas (implementação actual)
+## Árvore de pastas (implementação atual)
 
 ### Backend (`backend/`)
 
@@ -114,7 +114,7 @@ frontend/
 
 ### Referência histórica (monólito TypeScript)
 
-Havia um exemplo de **uma única pasta `src/`** em TypeScript/React (ficheiros `.ts` / `.tsx`). Foi **substituído** por este monorepo **Python + React JS**. Os **princípios** (domínio, portas, inglês no código, pt-BR na UI) mantêm-se; apenas mudam extensões e a divisão em dois pacotes.
+Havia um exemplo de **uma única pasta `src/`** em TypeScript/React (arquivos `.ts` / `.tsx`). Foi **substituído** por este monorepo **Python + React JS**. Os **princípios** (domínio, portas, inglês no código, pt-BR na UI) mantêm-se; apenas mudam extensões e a divisão em dois pacotes.
 
 ---
 
@@ -167,7 +167,7 @@ Suggested interfaces:
 | **Integração** | `application/*` with **in-memory** repo implementations of `ports/` |
 | **E2E** (opcional, mais tarde) | critical UI flows: organizer login → draw |
 
-**Backend:** ficheiros em `backend/tests/` (`test_*.py`). **Frontend:** testes (Vitest/RTL) podem seguir `*.test.jsx` junto aos componentes quando forem introduzidos.
+**Backend:** arquivos em `backend/tests/` (`test_*.py`). **Frontend:** testes (Vitest/RTL) podem seguir `*.test.jsx` junto aos componentes quando forem introduzidos.
 
 ---
 
@@ -187,9 +187,9 @@ Suggested interfaces:
 
 ## Resumo
 
-- **`domain/`** = verdade do negócio e algoritmo de sorteio (ficheiros e símbolos em **inglês**).  
+- **`domain/`** = verdade do negócio e algoritmo de sorteio (arquivos e símbolos em **inglês**).  
 - **`application/`** = fluxos que os organizadores disparam (**inglês**).  
 - **`ports/` + `infrastructure/`** = onde a base de dados e auth moram (**inglês**).  
 - **`frontend/src/`** = mobile-first, sem lógica de negócio pesada; **cópias** só em **pt-BR** (`strings/pt-BR.js`).
 
-Comandos de arranque: ver [README.md](../README.md) (secção **Stack e monorepo**).
+Comandos para subir o ambiente: ver [README.md](../README.md) (seção **Stack e monorepo**).

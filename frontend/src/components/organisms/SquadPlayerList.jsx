@@ -11,6 +11,7 @@ import { SquadToolbar } from "../molecules/SquadToolbar.jsx";
 import { SquadPlayerRow } from "../molecules/SquadPlayerRow.jsx";
 import { SquadPlayerFormModal } from "./SquadPlayerFormModal.jsx";
 import { SquadPlayerSheetModal } from "./SquadPlayerSheetModal.jsx";
+import { LoadingBlock } from "../molecules/LoadingBlock.jsx";
 
 /** @param {Record<string, unknown>} row */
 function clonePlayerRow(row) {
@@ -107,7 +108,9 @@ export function SquadPlayerList() {
       <SquadToolbar onAddPlayer={openCreate} disabled={bootstrapping} />
 
       {bootstrapping ? (
-        <p className="fm-muted fm-squad-list-placeholder">{strings.apiStatusChecking}</p>
+        <div className="fm-squad-list-placeholder">
+          <LoadingBlock message={strings.apiStatusChecking} />
+        </div>
       ) : error ? (
         <p className="fm-muted fm-squad-list-placeholder">{strings.squadListError}</p>
       ) : (

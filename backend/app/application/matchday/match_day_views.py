@@ -4,12 +4,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
 class TeamView:
     slot: int
     player_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class KingQueueView:
+    queue: tuple[int, ...]
+    win_streak: tuple[tuple[int, int], ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,6 +51,9 @@ class SessionView:
     lineup_official: bool
     teams: tuple[TeamView, ...]
     fixtures: tuple[FixtureView, ...]
+    king_queue: KingQueueView | None
+    closed_at: datetime | None
+    day_summary: dict[str, Any] | None
 
 
 @dataclass(frozen=True, slots=True)

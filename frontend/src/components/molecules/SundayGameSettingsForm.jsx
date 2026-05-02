@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { strings } from "../../strings/pt-BR.js";
 import { SwitchField } from "../atoms/SwitchField.jsx";
+import { Button } from "../atoms/Button.jsx";
+import { CircleSpinner } from "../atoms/CircleSpinner.jsx";
 import { SelectField } from "./SelectField.jsx";
 
 /** @param {Record<string, unknown>} patch */
@@ -141,7 +143,7 @@ export function SundayGameSettingsForm({
       await onSave(patch);
       setSavedSignature(patchSignature(patch));
     } catch {
-      /* actionError no hook */
+      /* toast no hook useMatchDayToday */
     }
   }, [buildPatch, isDirty, onSave, settingsSaving]);
 
@@ -182,7 +184,8 @@ export function SundayGameSettingsForm({
     <div className="fm-sunday-settings">
       <h3 className="fm-sunday-settings__topic">{strings.sundayGameSettingsTopic}</h3>
       {settingsSaving ? (
-        <p className="fm-muted fm-sunday-settings__saving" role="status">
+        <p className="fm-muted fm-sunday-settings__saving fm-sunday-settings__saving--inline" role="status">
+          <CircleSpinner size="sm" decorative />
           {strings.sundayGameSettingsSaving}
         </p>
       ) : null}
@@ -280,14 +283,15 @@ export function SundayGameSettingsForm({
         </div>
 
         <div className="fm-sunday-settings__save-row">
-          <button
+          <Button
             type="button"
-            className="fm-btn fm-sunday-settings__save-btn"
+            className="fm-sunday-settings__save-btn"
             disabled={fieldDisabled || !isDirty}
+            loading={settingsSaving}
             onClick={() => void handleSave()}
           >
             {strings.sundayGameSettingsSave}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

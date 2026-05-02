@@ -7,7 +7,7 @@ import json
 
 
 def fingerprint_team_slots(slots: list[tuple[int, tuple[str, ...]]]) -> str:
-    """Assinatura estável por slot (ordem dos slots + conjuntos ordenados por equipa)."""
+    """Assinatura estável por slot (ordem dos slots + conjuntos ordenados por time)."""
     ordered = sorted(slots, key=lambda x: x[0])
     payload = [[slot, sorted(list(ids))] for slot, ids in ordered]
     raw = json.dumps(payload, separators=(",", ":"))

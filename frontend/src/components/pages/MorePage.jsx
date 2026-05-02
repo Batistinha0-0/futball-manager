@@ -50,7 +50,7 @@ export function MorePage() {
         </Text>
         <p className="fm-muted">{strings.moreLogoutHint}</p>
         <div className="fm-more__logout">
-          <Button type="button" onClick={handleLogout} disabled={loggingOut}>
+          <Button type="button" onClick={handleLogout} loading={loggingOut}>
             {loggingOut ? strings.moreLogoutWorking : strings.moreLogoutButton}
           </Button>
         </div>

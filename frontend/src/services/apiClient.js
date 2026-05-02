@@ -28,6 +28,40 @@ function shouldAttemptRefresh(path, status) {
   return !NO_REFRESH_ON_401.has(normalized);
 }
 
+/**
+ * Lê corpo JSON de erro (FastAPI: `detail` string ou lista de erros de validação).
+ * @param {Response} res
+ * @returns {Promise<string>}
+ */
+export async function errorMessageFromResponse(res) {
+  const fallback = `HTTP ${res.status}`;
+  const ct = res.headers.get("content-type") || "";
+  if (!ct.includes("application/json")) {
+    try {
+      const t = await res.text();
+      return t.trim() || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  try {
+    const j = await res.json();
+    const d = j?.detail;
+    if (typeof d === "string" && d.trim()) return d.trim();
+    if (Array.isArray(d)) {
+      const parts = d.map((item) => {
+        if (item && typeof item === "object" && typeof item.msg === "string") return item.msg;
+        return "";
+      });
+      const joined = parts.filter(Boolean).join(" · ");
+      return joined || fallback;
+    }
+  } catch {
+    return fallback;
+  }
+  return fallback;
+}
+
 function apiRequestOnce(path, init = {}) {
   const url = buildUrl(path);
   return fetch(url, {
@@ -71,7 +105,8 @@ export async function apiRequest(path, init = {}) {
 export async function apiGet(path) {
   const res = await apiRequest(path, { method: "GET" });
   if (!res.ok) {
-    const err = new Error(`HTTP ${res.status}`);
+    const message = await errorMessageFromResponse(res);
+    const err = new Error(message);
     err.status = res.status;
     throw err;
   }
@@ -92,7 +127,8 @@ export async function apiPost(path, body) {
   }
   const res = await apiRequest(path, init);
   if (!res.ok) {
-    const err = new Error(`HTTP ${res.status}`);
+    const message = await errorMessageFromResponse(res);
+    const err = new Error(message);
     err.status = res.status;
     throw err;
   }
@@ -115,7 +151,8 @@ export async function apiPatch(path, body) {
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const err = new Error(`HTTP ${res.status}`);
+    const message = await errorMessageFromResponse(res);
+    const err = new Error(message);
     err.status = res.status;
     throw err;
   }
@@ -133,7 +170,8 @@ export async function apiPatch(path, body) {
 export async function apiDelete(path) {
   const res = await apiRequest(path, { method: "DELETE" });
   if (!res.ok) {
-    const err = new Error(`HTTP ${res.status}`);
+    const message = await errorMessageFromResponse(res);
+    const err = new Error(message);
     err.status = res.status;
     throw err;
   }

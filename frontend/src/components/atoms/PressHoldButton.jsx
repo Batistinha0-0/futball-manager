@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
  *   disabled?: boolean,
  *   className?: string,
  *   variant?: "danger" | "primary",
- * }} props
+ * } & import("react").ButtonHTMLAttributes<HTMLButtonElement>} props
  */
 export function PressHoldButton({
   label,
@@ -19,6 +19,7 @@ export function PressHoldButton({
   disabled = false,
   className = "",
   variant = "danger",
+  ...rest
 }) {
   const [progress, setProgress] = useState(0);
   const holdRef = useRef(null);
@@ -82,6 +83,7 @@ export function PressHoldButton({
   return (
     <button
       type="button"
+      {...rest}
       className={`fm-press-hold ${mod} ${className}`.trim()}
       disabled={disabled}
       aria-label={label}

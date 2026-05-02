@@ -8,7 +8,7 @@ O objetivo é centralizar o cadastro de jogadores, avaliar o nível de cada um, 
 
 ## Brasil e idioma (PT-BR)
 
-A aplicação é **brasileira**: toda a experiência voltada ao utilizador deve estar em **português do Brasil (pt-BR)**, sem mistura com outros idiomas na interface nem em mensagens de sistema.
+A aplicação é **brasileira**: toda a experiência voltada ao usuário deve estar em **português do Brasil (pt-BR)**, sem mistura com outros idiomas na interface nem em mensagens de sistema.
 
 Inclui, obrigatoriamente:
 
@@ -19,7 +19,7 @@ Inclui, obrigatoriamente:
 - **Números na UI:** quando exibidos como texto (ex.: estatísticas), seguir convenção **pt-BR** (ex.: separador decimal com vírgula, se aplicável).
 - **Documentação para o organizador** (textos dentro do app, não necessariamente o README técnico do repositório): **PT-BR**.
 
-**Código vs produto:** tudo o que for **implementação** — nomes de **pastas e arquivos**, **funções**, **variáveis**, **tipos**, **rotas/API internas**, **commits** e comentários no repositório — deve estar em **inglês**. O **aplicativo em si** comporta-se como um produto **brasileiro**: cópias, fluxos e mensagens ao utilizador em **pt-BR**, com locale **`pt-BR`**, sem misturar inglês na interface. Cadeias mostradas ao utilizador vivem em catálogos de texto (ex.: `pt-BR.json` / `pt-BR.ts`); o domínio pode expor **códigos de erro em inglês** (ex.: `STARS_OUT_OF_RANGE`) mapeados para texto em **pt-BR** na UI. Detalhes em [`docs/estrutura-codigo.md`](docs/estrutura-codigo.md).
+**Código vs produto:** tudo o que for **implementação** — nomes de **pastas e arquivos**, **funções**, **variáveis**, **tipos**, **rotas/API internas**, **commits** e comentários no repositório — deve estar em **inglês**. O **aplicativo em si** comporta-se como um produto **brasileiro**: cópias, fluxos e mensagens ao usuário em **pt-BR**, com locale **`pt-BR`**, sem misturar inglês na interface. Cadeias mostradas ao usuário vivem em catálogos de texto (ex.: `pt-BR.json` / `pt-BR.ts`); o domínio pode expor **códigos de erro em inglês** (ex.: `STARS_OUT_OF_RANGE`) mapeados para texto em **pt-BR** na UI. Detalhes em [`docs/estrutura-codigo.md`](docs/estrutura-codigo.md).
 
 ---
 
@@ -29,16 +29,16 @@ Inclui, obrigatoriamente:
 - Manter uma **base de jogadores** (ativos e que já jogaram).
 - Ter **habilidade**, **perfil** e opcionalmente **posição** para balancear os times.
 - Lidar com **número variável de jogadores e de times** (nem sempre dá para jogar com o formato ideal às 8h30).
-- **Sortear times** de forma justa: habilidade equilibrada, sem times muito parecidos ao domingo anterior, e regras claras para **goleiro inicial** quando não há fixo na baliza.
+- **Sortear times** de forma justa: habilidade equilibrada, sem times muito parecidos ao domingo anterior, e regras claras para **goleiro inicial** quando não há fixo no gol.
 
 ---
 
 ## Quem pode usar (acesso)
 
-- Apenas **organizadores** acedem à aplicação.
+- Apenas **organizadores** acessam a aplicação.
 - Só eles podem: marcar **quem veio** / **quem compareceu**, gerir a **base de jogadores**, editar **notas (estrelas)** e **dados do perfil**, configurar o **domingo** e **sortear times**.
 
-Isto simplifica permissões, segurança e uso no dia a dia.
+Isso simplifica permissões, segurança e uso no dia a dia.
 
 ---
 
@@ -62,7 +62,7 @@ Ao cadastrar (ou manter) um jogador na base, preenche-se obrigatoriamente:
 | Campo          | Descrição                                                                                                  |
 | -------------- | ---------------------------------------------------------------------------------------------------------- |
 | **Habilidade** | Estrelas de **0 a 5**, com incrementos de **meia estrela** (ex.: 2,5 ★). Usada no balanceamento dos times. |
-| **Perfil**     | Uma de: **ataque**, **defesa** ou **misto**. O sorteio usa isto para compor a linha de forma coerente.     |
+| **Perfil**     | Uma de: **ataque**, **defesa** ou **misto**. O sorteio usa isso para compor a linha de forma coerente.     |
 
 **Posição** (ex.: zagueiro, lateral, meia) é **opcional**. Se estiver preenchida, o algoritmo de sorteio deve **levar em consideração** como preferência / encaixe, sem impedir soluções quando faltar gente ou posições.
 
@@ -81,29 +81,29 @@ A **base** pode ser configurada: ativar/desativar jogadores, editar dados, remov
 
 ### Cenários
 
-1. **Há goleiro(es) de facto naquele dia**  
-   Jogadores identificados como aptos ou preferência para a baliza; o sorteio pode **atribuir 1 goleiro por time** entre eles.
+1. **Há goleiro(es) de fato naquele dia**  
+   Jogadores identificados como aptos ou preferência para o gol; o sorteio pode **atribuir 1 goleiro por time** entre eles.
 
 2. **Não há goleiro fixo**  
-   Qualquer um pode ir à baliza; os jogadores **revezam** durante o jogo.
+   Qualquer um pode ir no gol; os jogadores **revezam** durante o jogo.
 
 ### Regra no campo (fora da app)
 
-O revezamento na baliza **não é cronometrado pela app**: é **por gol**.
+O revezamento no gol **não é cronometrado pela app**: é **por gol**.
 
-- **Quem está na baliza e sofre um gol, troca** com outro jogador do mesmo time (regra combinada no campo).
-- Isto é **dinâmico** e **não precisa de registo gol a gol** na primeira versão do produto, salvo evolução futura.
+- **Quem está no gol e sofre um gol, troca** com outro jogador do mesmo time (regra combinada no campo).
+- Isso é **dinâmico** e **não precisa de registro gol a gol** na primeira versão do produto, salvo evolução futura.
 
 ### O que a app deve garantir: **goleiro inicial**
 
-Mesmo com revezamento por gol no decorrer do jogo, é preciso saber **quem começa na baliza** em cada time.
+Mesmo com revezamento por gol no decorrer do jogo, é preciso saber **quem começa no gol** em cada time.
 
 - A aplicação deve indicar, para cada time sorteado, o **goleiro inicial** (sugestão ou atribuição clara na lista publicada).
-- Critério sugerido quando não há fixo: favorecer quem **menos** começou como goleiro nas últimas sessões ou rodízio simples entre os que aceitam ir à baliza — o detalhe fica para a implementação, mas a **regra de negócio** é: **sempre haver um goleiro inicial por time**, alinhado ao formato do dia (6 com GK, ou 5 com 1 na baliza, etc.).
+- Critério sugerido quando não há fixo: favorecer quem **menos** começou como goleiro nas últimas sessões ou rodízio simples entre os que aceitam ir no gol — o detalhe fica para a implementação, mas a **regra de negócio** é: **sempre haver um goleiro inicial por time**, alinhado ao formato do dia (6 com GK, ou 5 com 1 no gol, etc.).
 
 ### Balanceamento
 
-Quando alguém forte vai à baliza no início, pode distorcer a “força da linha”. Opcionalmente, o sorteio pode tratar o **goleiro inicial** como papel separado e equilibrar sobretudo os **jogadores de linha** por estrelas/perfil; isso evita times visualmente equilibrados em papel mas desiguais na prática.
+Quando alguém forte vai no gol no início, pode distorcer a “força da linha”. Opcionalmente, o sorteio pode tratar o **goleiro inicial** como papel separado e equilibrar principalmente os **jogadores de linha** por estrelas/perfil; isso evita times visualmente equilibrados em papel mas desiguais na prática.
 
 ---
 
@@ -120,7 +120,7 @@ Critérios de produto (prioridade sugerida: primeiro **equilíbrio de habilidade
 | **Histórico / variação** | Evitar sortear times **muito parecidos** aos do **domingo anterior** (mesmo conjunto ou quase o mesmo elenco num mesmo time). |
 | **Perfil e posição**     | Respeitar perfil obrigatório; usar posição opcional quando preenchida.                                                        |
 
-A métrica exacta de “time parecido” (ex.: sobreposição de conjuntos, distância entre formações) fica para a implementação, mas o comportamento desejado está acima.
+A métrica exata de “time parecido” (ex.: sobreposição de conjuntos, distância entre formações) fica para a implementação, mas o comportamento desejado está acima.
 
 ---
 
@@ -153,25 +153,25 @@ Pré-requisitos: **Python 3.11+**, **Node.js 20+** (recomendado). Para Postgres 
 
 ### Docker (só PostgreSQL) — `backend/`
 
-O fluxo de desenvolvimento previsto é: **Postgres dentro do Docker**, **API no teu Python local** a ligar a `127.0.0.1:5432` (recomendado: [`python start.py`](backend/start.py) no `backend/`; valida ambiente e base antes de subir o Uvicorn).
+O fluxo de desenvolvimento previsto é: **Postgres dentro do Docker**, **API no Python local** conectando em `127.0.0.1:5432` (recomendado: [`python start.py`](backend/start.py) no `backend/`; valida ambiente e base antes de subir o Uvicorn).
 
-O ficheiro [`backend/docker-compose.yml`](backend/docker-compose.yml) sobe **apenas** o serviço `db`. Corre **a partir de `backend/`**:
+O arquivo [`backend/docker-compose.yml`](backend/docker-compose.yml) sobe **apenas** o serviço `db`. Rode **a partir de `backend/`**:
 
 ```bash
 cd backend
 docker compose up -d
 ```
 
-- **Postgres:** `localhost:5432`, utilizador / base / palavra-passe por defeito `futball` (ajusta em `docker-compose.yml` ou em `backend/.env`; se mudares o utilizador, atualiza o `healthcheck` do `db`). O contentor chama-se **`futball-postgres`** (o projeto Compose é `futball-manager`, para não usar o nome da pasta `backend`).
+- **Postgres:** `localhost:5432`, usuário / base / senha padrão `futball` (ajuste em `docker-compose.yml` ou em `backend/.env`; se mudar o usuário, atualize o `healthcheck` do `db`). O contêiner chama-se **`futball-postgres`** (o projeto Compose é `futball-manager`, para não usar o nome da pasta `backend`).
 - **API local:** no `backend/.env` (ou no ambiente), define por exemplo:
 
   ```env
   DATABASE_URL=postgresql+psycopg://futball:futball@127.0.0.1:5432/futball
   ```
 
-  Depois: `python start.py` (ou `uvicorn app.main:app --reload`) — as migrações **Alembic** correm no arranque quando `DATABASE_URL` está definida.
+  Depois: `python start.py` (ou `uvicorn app.main:app --reload`) — as migrações **Alembic** rodam na inicialização quando `DATABASE_URL` está definida.
 
-Opcional: copia [`backend/.env.example`](backend/.env.example) para `backend/.env` e ajusta. O Compose lê `.env` no mesmo directório que o `docker-compose.yml` ([documentação](https://docs.docker.com/compose/environment-variables/)).
+Opcional: copie [`backend/.env.example`](backend/.env.example) para `backend/.env` e ajuste. O Compose lê `.env` no mesmo diretório que o `docker-compose.yml` ([documentação](https://docs.docker.com/compose/environment-variables/)).
 
 A **imagem Docker da API** ([`backend/Dockerfile`](backend/Dockerfile)) mantém-se para **Render** ou outros deploys (`docker build` / CI), não para o dia-a-dia local com este compose.
 
@@ -183,7 +183,7 @@ Mensagens com `dockerDesktopLinuxEngine` e falha ao criar/pull `postgres:16-alpi
 2. **Reinicia o Docker Desktop** (Quit completamente e volta a abrir).
 3. No PowerShell: `wsl --shutdown`, abre de novo o Docker Desktop e espera até ficar pronto.
 4. Testa o pull isolado: `docker pull postgres:16-alpine`. Se também falhar, é rede/registry ou instalação Docker — atualiza o **Docker Desktop** para a versão mais recente.
-5. VPN, proxy corporativo ou antivírus às vezes bloqueiam o registo; desliga temporariamente para testar.
+5. VPN, proxy corporativo ou antivírus às vezes bloqueiam o registro; desligue temporariamente para testar.
 
 #### Build da imagem da API (deploy): `SSLCertVerificationError` ao instalar do PyPI
 
@@ -196,7 +196,7 @@ Aparece ao correr **`docker build`** (ex.: no Render ou CI) quando a rede inspec
    docker build --build-arg PIP_TRUSTED_HOSTS=1 -t futball-api .
    ```
 
-   Isto passa `--trusted-host` ao `pip` só durante o build (em ambientes limpos não é necessário).
+   Isso passa `--trusted-host` ao `pip` só durante o build (em ambientes limpos não é necessário).
 
 ### Render + Neon (produção simples)
 
@@ -204,7 +204,7 @@ Aparece ao correr **`docker build`** (ex.: no Render ou CI) quando a rede inspec
 2. Para o SQLAlchemy + **psycopg** v3, troca o esquema para **`postgresql+psycopg://`** (mantém o resto da URL, incluindo `?sslmode=require` se existir).
 3. No [**Render**](https://render.com), cria um **Web Service** com **Docker** e aponta:
    - **Dockerfile path:** `backend/Dockerfile`
-   - **Docker build context:** `backend` (directório `backend/` na raiz do repo)
+   - **Docker build context:** `backend` (diretório `backend/` na raiz do repo)
 4. Define variáveis de ambiente no Render:
    - **`DATABASE_URL`** — string do passo 2 (marca como segredo).
    - **`CORS_ORIGINS`** — URL do teu frontend em produção (várias origens separadas por vírgula).
@@ -251,7 +251,7 @@ Estrutura detalhada de pastas e convenções: [`docs/estrutura-codigo.md`](docs/
 | **Base de jogadores** | Todos cadastrados no grupo, com estrelas, perfil e posição opcional.                                   |
 | **Lista do domingo**  | Subconjunto da base que participa **naquele** domingo.                                                 |
 | **Sessão / rodada**   | Um domingo de jogo: configuração (tamanhos dos times), presenças, times sorteados e goleiros iniciais. |
-| **Goleiro inicial**   | Quem começa na baliza naquele time; a app define ou sugere; o revezamento por gol é no campo.          |
+| **Goleiro inicial**   | Quem começa no gol naquele time; a app define ou sugere; o revezamento por gol é no campo.          |
 
 ---
 

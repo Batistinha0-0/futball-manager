@@ -3,7 +3,7 @@ import { IconChevronDown } from "../atoms/IconChevronDown.jsx";
 import { Text } from "../atoms/Text.jsx";
 
 /**
- * Secção com título clicável; conteúdo expande/recolhe com animação (grid 0fr → 1fr).
+ * Seção com título clicável; conteúdo expande/recolhe com animação (grid 0fr → 1fr).
  * @param {{
  *   title: string,
  *   defaultOpen?: boolean,

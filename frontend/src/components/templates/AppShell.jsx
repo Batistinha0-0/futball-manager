@@ -3,7 +3,7 @@ import { DesktopSidebar } from "../organisms/DesktopSidebar.jsx";
 import { MobileTabBar } from "../organisms/MobileTabBar.jsx";
 
 /**
- * Invólucro da app: sidebar em ecrãs largos, tab bar em mobile; conteúdo no meio.
+ * Invólucro da app: sidebar em telas largas, tab bar no mobile; conteúdo no meio.
  */
 export function AppShell() {
   return (

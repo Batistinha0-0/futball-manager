@@ -44,7 +44,7 @@ docker build --build-arg PIP_TRUSTED_HOSTS=1 -t futball-api .
 
 Open `http://127.0.0.1:8000/docs` for OpenAPI.
 
-## Produção (mesma origem: site no telemóvel)
+## Produção (mesma origem: site no celular)
 
 Se existir a pasta **`static_site/`** ao lado de `app/` (conteúdo de `frontend/dist` após `npm run build`), o FastAPI serve o SPA em `/` e a API continua em `/api/v1/...`. O build de produção do front usa `frontend/.env.production` com `VITE_API_URL` vazio para pedidos relativos. No Render, ver `deploy/render-build.sh` e `deploy/render-backend.env`.
 

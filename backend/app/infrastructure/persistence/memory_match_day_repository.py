@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import date
 
 from app.domain.matchday.entities import (
@@ -5,7 +6,9 @@ from app.domain.matchday.entities import (
     MatchDaySession,
     MatchDayTeam,
     MatchEvent,
+    PlayerMatchDayStat,
 )
+from app.domain.matchday.session_summary import MatchDaySessionSummary
 from app.ports.match_day_repository import MatchDayRepository
 
 
@@ -19,6 +22,7 @@ class MemoryMatchDayRepository(MatchDayRepository):
         self._fixtures: dict[str, list[MatchDayFixture]] = {}
         self._fixture_by_id: dict[str, MatchDayFixture] = {}
         self._events: dict[str, list[MatchEvent]] = {}
+        self._player_match_day_stats: dict[str, list[PlayerMatchDayStat]] = {}
 
     def get_session_by_id(self, session_id: str) -> MatchDaySession | None:
         return self._sessions_by_id.get(session_id)
@@ -28,6 +32,21 @@ class MemoryMatchDayRepository(MatchDayRepository):
         if not sid:
             return None
         return self._sessions_by_id.get(sid)
+
+    def list_session_summaries_between(self, start: date, end: date) -> list[MatchDaySessionSummary]:
+        items: list[MatchDaySessionSummary] = []
+        for s in self._sessions_by_id.values():
+            if start <= s.session_date <= end:
+                items.append(
+                    MatchDaySessionSummary(
+                        session_date=s.session_date,
+                        phase=s.phase.value,
+                        updated_at=s.updated_at,
+                        has_draft=bool(s.draft_teams_json),
+                    )
+                )
+        items.sort(key=lambda x: x.session_date, reverse=True)
+        return items
 
     def save_session(self, session: MatchDaySession) -> None:
         self._sessions_by_id[session.id] = session
@@ -41,6 +60,7 @@ class MemoryMatchDayRepository(MatchDayRepository):
         if session:
             self._date_to_session_id.pop(session.session_date, None)
         self._teams.pop(session_id, None)
+        self._player_match_day_stats.pop(session_id, None)
         fxs = self._fixtures.pop(session_id, None)
         if fxs:
             for fx in fxs:
@@ -92,3 +112,6 @@ class MemoryMatchDayRepository(MatchDayRepository):
 
     def append_event(self, event: MatchEvent) -> None:
         self._events.setdefault(event.fixture_id, []).append(event)
+
+    def replace_player_match_day_stats(self, session_id: str, rows: Sequence[PlayerMatchDayStat]) -> None:
+        self._player_match_day_stats[session_id] = list(rows)

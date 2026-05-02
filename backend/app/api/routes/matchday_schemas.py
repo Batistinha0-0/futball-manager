@@ -1,16 +1,22 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Literal
+from datetime import date, datetime
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 from app.application.matchday.match_day_views import TodayView
+from app.domain.matchday.session_summary import MatchDaySessionSummary
 
 
 class TeamOut(BaseModel):
     slot: int
     player_ids: list[str] = Field(default_factory=list)
+
+
+class KingQueueOut(BaseModel):
+    queue: list[int]
+    win_streak: dict[str, int]
 
 
 class FixtureOut(BaseModel):
@@ -43,6 +49,25 @@ class SessionOut(BaseModel):
     lineup_official: bool = False
     teams: list[TeamOut]
     fixtures: list[FixtureOut]
+    king_queue: KingQueueOut | None = None
+    closed_at: datetime | None = None
+    day_summary: dict[str, Any] | None = None
+
+
+class RecentSessionOut(BaseModel):
+    session_date: date
+    phase: str
+    updated_at: datetime
+    has_draft: bool
+
+    @classmethod
+    def from_summary(cls, s: MatchDaySessionSummary) -> RecentSessionOut:
+        return cls(
+            session_date=s.session_date,
+            phase=s.phase,
+            updated_at=s.updated_at,
+            has_draft=s.has_draft,
+        )
 
 
 class TodayOut(BaseModel):
@@ -86,6 +111,16 @@ class TodayOut(BaseModel):
                     )
                     for f in s.fixtures
                 ],
+                king_queue=(
+                    KingQueueOut(
+                        queue=list(s.king_queue.queue),
+                        win_streak={str(k): v for k, v in s.king_queue.win_streak},
+                    )
+                    if s.king_queue is not None
+                    else None
+                ),
+                closed_at=s.closed_at,
+                day_summary=s.day_summary,
             )
         return cls(server_now=v.server_now, sunday_match_layout=v.sunday_match_layout, session=sess)
 
@@ -102,7 +137,7 @@ class TodaySettingsPatchBody(BaseModel):
 
 
 class MatchEventCreateBody(BaseModel):
-    type: Literal["goal", "goalkeeper_save"]
+    type: Literal["goal", "goalkeeper_save", "assist", "yellow_card", "red_card"]
     team_slot: int = Field(..., ge=1)
     player_id: str | None = None
     elapsed_seconds: int | None = None

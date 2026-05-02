@@ -1,6 +1,7 @@
+from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.db_commit_scope import run_with_optional_commit
@@ -8,6 +9,7 @@ from app.api.deps import get_db, get_match_day_service, require_players_read, re
 from app.api.routes.matchday_schemas import (
     MatchEventCreateBody,
     MatchEventOut,
+    RecentSessionOut,
     TodayOut,
     TodaySettingsPatchBody,
 )
@@ -49,12 +51,41 @@ def _event_type_from_str(value: str) -> MatchEventType:
         ) from e
 
 
+@router.get("/match-day/recent-sessions", response_model=list[RecentSessionOut])
+def get_match_day_recent_sessions(
+    _: Annotated[User, Depends(require_players_read)],
+    service: Annotated[MatchDayService, Depends(get_match_day_service)],
+) -> list[RecentSessionOut]:
+    return [RecentSessionOut.from_summary(s) for s in service.list_recent_session_summaries()]
+
+
 @router.get("/match-day/today", response_model=TodayOut)
 def get_match_day_today(
     _: Annotated[User, Depends(require_players_read)],
     service: Annotated[MatchDayService, Depends(get_match_day_service)],
+    session_date: Annotated[date | None, Query(description="Data da sessão (YYYY-MM-DD); omitir = hoje no fuso da app.")] = None,
 ) -> TodayOut:
-    return TodayOut.from_view(service.get_today_view())
+    try:
+        return TodayOut.from_view(service.get_today_view(session_date))
+    except ValidationError as exc:
+        raise _http_for_matchday_validation(exc) from exc
+
+
+@router.post("/match-day/today/close-day", response_model=TodayOut)
+def post_match_day_close_day(
+    __: Annotated[User, Depends(require_players_write)],
+    db: Annotated[Session | None, Depends(get_db)],
+    service: Annotated[MatchDayService, Depends(get_match_day_service)],
+    session_date: Annotated[date | None, Query(description="Data da sessão a encerrar; omitir = hoje.")] = None,
+) -> TodayOut:
+    try:
+
+        def _close() -> TodayOut:
+            return TodayOut.from_view(service.close_today_session(session_date))
+
+        return run_with_optional_commit(db, _close)
+    except ValidationError as exc:
+        raise _http_for_matchday_validation(exc) from exc
 
 
 @router.post("/match-day/today/draw", response_model=TodayOut)
@@ -62,11 +93,12 @@ def post_match_day_draw(
     __: Annotated[User, Depends(require_players_write)],
     db: Annotated[Session | None, Depends(get_db)],
     service: Annotated[MatchDayService, Depends(get_match_day_service)],
+    session_date: Annotated[date | None, Query(description="Data da sessão a sortear; omitir = hoje.")] = None,
 ) -> TodayOut:
     try:
 
         def _draw() -> TodayOut:
-            return TodayOut.from_view(service.draw_today())
+            return TodayOut.from_view(service.draw_today(session_date))
 
         return run_with_optional_commit(db, _draw)
     except ValidationError as exc:
@@ -79,6 +111,7 @@ def patch_match_day_today_settings(
     __: Annotated[User, Depends(require_players_write)],
     db: Annotated[Session | None, Depends(get_db)],
     service: Annotated[MatchDayService, Depends(get_match_day_service)],
+    session_date: Annotated[date | None, Query(description="Data da sessão a alterar; omitir = hoje.")] = None,
 ) -> TodayOut:
     raw = body.model_dump(exclude_unset=True)
     if not raw:
@@ -98,7 +131,7 @@ def patch_match_day_today_settings(
     try:
 
         def _patch() -> TodayOut:
-            return TodayOut.from_view(service.patch_today_settings(updates, phase=phase))
+            return TodayOut.from_view(service.patch_today_settings(updates, phase=phase, session_date=session_date))
 
         return run_with_optional_commit(db, _patch)
     except ValidationError as exc:
@@ -118,6 +151,23 @@ def post_fixture_start(
             return TodayOut.from_view(service.start_fixture(fixture_id))
 
         return run_with_optional_commit(db, _start)
+    except ValidationError as exc:
+        raise _http_for_matchday_validation(exc) from exc
+
+
+@router.post("/match-day/today/fixtures/{fixture_id}/time-expired", response_model=TodayOut)
+def post_fixture_time_expired(
+    fixture_id: str,
+    __: Annotated[User, Depends(require_players_write)],
+    db: Annotated[Session | None, Depends(get_db)],
+    service: Annotated[MatchDayService, Depends(get_match_day_service)],
+) -> TodayOut:
+    try:
+
+        def _te() -> TodayOut:
+            return TodayOut.from_view(service.finish_fixture_time_expired(fixture_id))
+
+        return run_with_optional_commit(db, _te)
     except ValidationError as exc:
         raise _http_for_matchday_validation(exc) from exc
 

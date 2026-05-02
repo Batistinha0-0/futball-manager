@@ -93,7 +93,7 @@ export function SuperAdminUserEditModal({ open, user, onClose, onSaved }) {
           <Button type="button" onClick={onClose} disabled={submitting}>
             {strings.usersAdminCancel}
           </Button>
-          <Button type="button" onClick={handleSave} disabled={submitting}>
+          <Button type="button" onClick={handleSave} loading={submitting}>
             {submitting ? strings.usersAdminSaving : strings.usersAdminSave}
           </Button>
         </div>

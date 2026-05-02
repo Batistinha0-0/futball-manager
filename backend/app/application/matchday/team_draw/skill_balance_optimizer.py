@@ -1,4 +1,4 @@
-"""Troca jogadores entre equipas para equilibrar faixas de habilidade."""
+"""Troca jogadores entre times para equilibrar faixas de habilidade."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def _skill_cost(buckets: list[list[str]], by_id: dict[str, Player]) -> float:
 
 
 class SkillTierBalanceOptimizer:
-    """Hill-climbing por swaps entre equipas (só melhora custo de habilidade)."""
+    """Hill-climbing por swaps entre times (só melhora custo de habilidade)."""
 
     def __init__(self, *, max_passes: int = 100) -> None:
         self._max_passes = max_passes

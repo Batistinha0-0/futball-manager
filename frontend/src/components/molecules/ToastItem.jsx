@@ -6,7 +6,7 @@ const SWIPE_DISMISS_PX = 72;
  * @param {{
  *   id: string,
  *   message: string,
- *   variant: "success" | "error" | "info",
+ *   variant: "success" | "error" | "info" | "warning",
  *   duration: number,
  *   onExited: (id: string) => void,
  * }} props

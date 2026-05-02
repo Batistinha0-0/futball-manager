@@ -1,4 +1,5 @@
 import { strings } from "../../strings/pt-BR.js";
+import { Button } from "../atoms/Button.jsx";
 
 /**
  * @param {{
@@ -29,9 +30,9 @@ export function SundayTeamsSection({
           {hasSession && unsavedSettings ? (
             <p className="fm-muted fm-sunday-teams__hint">{strings.sundayGameUnsavedSettingsHint}</p>
           ) : null}
-          <button type="button" className="fm-btn" disabled={drawBlocked} onClick={() => onDraw()}>
+          <Button type="button" disabled={drawBlocked} loading={busy} onClick={() => void onDraw()}>
             {drawButtonLabel ?? strings.matchDayDraw}
-          </button>
+          </Button>
         </div>
       ) : (
         <p className="fm-muted">{strings.matchDayDrawReadOnly}</p>

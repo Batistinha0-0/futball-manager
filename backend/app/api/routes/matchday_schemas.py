@@ -47,6 +47,7 @@ class SessionOut(BaseModel):
     fixed_goalkeeper_player_id_1: str | None
     fixed_goalkeeper_player_id_2: str | None
     lineup_official: bool = False
+    partida_board_unlocked: bool = False
     teams: list[TeamOut]
     fixtures: list[FixtureOut]
     king_queue: KingQueueOut | None = None
@@ -94,6 +95,7 @@ class TodayOut(BaseModel):
                 fixed_goalkeeper_player_id_1=s.fixed_goalkeeper_player_id_1,
                 fixed_goalkeeper_player_id_2=s.fixed_goalkeeper_player_id_2,
                 lineup_official=s.lineup_official,
+                partida_board_unlocked=s.partida_board_unlocked,
                 teams=[TeamOut(slot=t.slot, player_ids=list(t.player_ids)) for t in s.teams],
                 fixtures=[
                     FixtureOut(

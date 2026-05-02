@@ -122,6 +122,7 @@ class MatchDayService:
             fixed_goalkeeper_player_id_1=s.fixed_goalkeeper_player_id_1,
             fixed_goalkeeper_player_id_2=s.fixed_goalkeeper_player_id_2,
             lineup_official=s.lineup_committed_at is not None,
+            partida_board_unlocked=s.partida_board_unlocked,
             teams=tuple(TeamView(slot=t.slot, player_ids=t.player_ids) for t in sorted(teams, key=lambda x: x.slot)),
             fixtures=tuple(
                 FixtureView(
@@ -329,6 +330,7 @@ class MatchDayService:
                 updated_at=now,
                 king_state_json=king_state_json,
                 lineup_committed_at=None if full_round_reset else s.lineup_committed_at,
+                partida_board_unlocked=False,
             )
         )
         _log.info(
@@ -468,6 +470,7 @@ class MatchDayService:
                 king_state_json=None,
                 closed_at=None,
                 day_summary_json=None,
+                partida_board_unlocked=False,
             )
             self._match_days.save_session(ns)
         else:
@@ -508,6 +511,7 @@ class MatchDayService:
                 king_state_json=king_patch,
                 closed_at=s.closed_at,
                 day_summary_json=s.day_summary_json,
+                partida_board_unlocked=s.partida_board_unlocked,
             )
             self._match_days.save_session(ns)
             for f in self._match_days.list_fixtures(s.id):
@@ -910,7 +914,47 @@ class MatchDayService:
 
     def _bump_session_phase_live(self, session_id: str) -> None:
         s = self._match_days.get_session_by_id(session_id)
-        if not s or s.phase is MatchDayPhase.LIVE:
+        if not s:
             return
         now = datetime.now(timezone.utc)
-        self._match_days.save_session(replace(s, phase=MatchDayPhase.LIVE, updated_at=now))
+        if s.phase is MatchDayPhase.LIVE:
+            if not s.partida_board_unlocked:
+                self._match_days.save_session(replace(s, partida_board_unlocked=True, updated_at=now))
+            return
+        self._match_days.save_session(
+            replace(s, phase=MatchDayPhase.LIVE, updated_at=now, partida_board_unlocked=True)
+        )
+
+    def unlock_partida_board(self, session_date: date | None = None) -> TodayView:
+        """Libera a UI da aba Partida (campo + cronômetro) sem iniciar o jogo — após segurar o apito na Início."""
+        d = self._resolve_target_session_date(session_date)
+        s = self._match_days.get_session_by_date(d)
+        if not s:
+            raise ValidationError(
+                "match_day_no_session",
+                "Não há sessão de dia de jogo para esta data.",
+            )
+        if s.phase is MatchDayPhase.CLOSED:
+            raise ValidationError(
+                "match_day_session_closed",
+                "O dia de jogo já foi encerrado.",
+            )
+        if s.partida_board_unlocked:
+            return self.get_view_for_session_date(d)
+        fxs = self._match_days.list_fixtures(s.id)
+        if not fxs:
+            raise ValidationError(
+                "match_day_unlock_no_fixtures",
+                "Sorteie os times antes de preparar a partida.",
+            )
+        if not any(f.status is MatchFixtureStatus.PENDING for f in fxs) and not any(
+            f.status is MatchFixtureStatus.LIVE for f in fxs
+        ):
+            raise ValidationError(
+                "match_day_unlock_nothing_pending",
+                "Não há confronto pendente para preparar na tela Partida.",
+            )
+        now = datetime.now(timezone.utc)
+        self._match_days.save_session(replace(s, partida_board_unlocked=True, updated_at=now))
+        _log.info("unlock_partida_board session_id=%s", s.id)
+        return self.get_view_for_session_date(d)

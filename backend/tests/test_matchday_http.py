@@ -119,12 +119,14 @@ def test_match_day_draw_start_goal_finish_flow(client: TestClient) -> None:
     assert patch.json()["session"]["fixtures"][0]["duration_seconds"] == 300
 
     assert d["session"]["lineup_official"] is False
+    assert d["session"]["partida_board_unlocked"] is False
 
     start = client.post(f"/api/v1/match-day/today/fixtures/{fid}/start")
     assert start.status_code == 200
     assert start.json()["session"]["lineup_official"] is True
     assert start.json()["session"]["phase"] == "live"
     assert start.json()["session"]["fixtures"][0]["status"] == "live"
+    assert start.json()["session"]["partida_board_unlocked"] is True
 
     ev = client.post(
         f"/api/v1/match-day/today/fixtures/{fid}/events",
@@ -373,3 +375,23 @@ def test_draw_again_after_all_fixtures_finished_two_teams(client: TestClient) ->
     assert sess["lineup_official"] is False
     assert len(sess["fixtures"]) == 1
     assert sess["fixtures"][0]["status"] == "pending"
+    assert sess["partida_board_unlocked"] is False
+
+
+def test_unlock_partida_board_after_draw(client: TestClient) -> None:
+    _login(client)
+    _create_player(client, "U1", 4.0)
+    _create_player(client, "U2", 3.5)
+    client.patch(
+        "/api/v1/match-day/today/settings",
+        json={"team_count": 2, "players_per_team": 1, "default_match_duration_seconds": 420},
+    )
+    dr = client.post("/api/v1/match-day/today/draw")
+    assert dr.status_code == 200, dr.text
+    assert dr.json()["session"]["partida_board_unlocked"] is False
+    u = client.post("/api/v1/match-day/today/unlock-partida-board")
+    assert u.status_code == 200, u.text
+    assert u.json()["session"]["partida_board_unlocked"] is True
+    u2 = client.post("/api/v1/match-day/today/unlock-partida-board")
+    assert u2.status_code == 200
+    assert u2.json()["session"]["partida_board_unlocked"] is True

@@ -39,3 +39,4 @@ class MatchDaySessionRow(Base):
     king_state_json: Mapped[str | None] = mapped_column(Text(), nullable=True)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     day_summary_json: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    partida_board_unlocked: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)

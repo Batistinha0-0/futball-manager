@@ -105,6 +105,23 @@ def post_match_day_draw(
         raise _http_for_matchday_validation(exc) from exc
 
 
+@router.post("/match-day/today/unlock-partida-board", response_model=TodayOut)
+def post_unlock_partida_board(
+    __: Annotated[User, Depends(require_players_write)],
+    db: Annotated[Session | None, Depends(get_db)],
+    service: Annotated[MatchDayService, Depends(get_match_day_service)],
+    session_date: Annotated[date | None, Query(description="Data da sessão; omitir = hoje.")] = None,
+) -> TodayOut:
+    try:
+
+        def _unlock() -> TodayOut:
+            return TodayOut.from_view(service.unlock_partida_board(session_date))
+
+        return run_with_optional_commit(db, _unlock)
+    except ValidationError as exc:
+        raise _http_for_matchday_validation(exc) from exc
+
+
 @router.patch("/match-day/today/settings", response_model=TodayOut)
 def patch_match_day_today_settings(
     body: TodaySettingsPatchBody,

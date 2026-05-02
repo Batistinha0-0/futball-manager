@@ -255,10 +255,13 @@ export function MatchLivePage() {
 
   const liveFx = useMemo(() => fixtures.find((f) => f.status === "live") ?? null, [fixtures]);
   const sessionPhase = String(session?.phase ?? "");
+  const partidaBoardUnlocked = Boolean(session?.partida_board_unlocked);
+  const showPartidaBoard = Boolean(liveFx) || partidaBoardUnlocked;
   const showCloseDayDock =
     Boolean(session) &&
     sessionPhase !== "closed" &&
     canWrite &&
+    showPartidaBoard &&
     (fixtures.length > 0 || sessionPhase === "live");
   const nextPendingFx = useMemo(() => {
     if (liveFx) return null;
@@ -605,6 +608,27 @@ export function MatchLivePage() {
           <Link className="fm-btn" to={homeHref}>
             {strings.matchLiveBackHome}
           </Link>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  const hasPendingNotLive = Boolean(
+    session && fixtures.some((f) => String(f.status) === "pending") && !liveFx,
+  );
+  if (!showPartidaBoard && hasPendingNotLive) {
+    return (
+      <MainLayout header={<AppHeader title={strings.matchLivePageTitle} subtitle={strings.matchLivePageSubtitle} />}>
+        <div className="fm-page-grid">
+          <section className="fm-card fm-match-live-empty fm-match-live-empty--locked">
+            <Text as="h2" className="fm-card__title">
+              {strings.matchLiveBoardLockedTitle}
+            </Text>
+            <p className="fm-muted">{strings.matchLiveBoardLockedBody}</p>
+            <Link className="fm-btn fm-btn--primary" to={homeHref}>
+              {strings.matchLiveBoardLockedCta}
+            </Link>
+          </section>
         </div>
       </MainLayout>
     );

@@ -75,6 +75,7 @@ export const strings = {
   toastMatchDayFinishOk: "Sub-partida terminada. Placar, fila e próximo jogo já foram atualizados.",
   toastMatchDayTimeExpiredOk: "Tempo da sub-partida acabou; o jogo foi fechado e o estado do dia foi atualizado.",
   toastMatchDayCloseOk: "Dia de jogo encerrado no sistema. Abra a aba Relatórios para ver o resumo, quando houver.",
+  toastMatchDayPartidaBoardUnlocked: "Aba Partida liberada — pode abrir e iniciar quando quiser.",
   toastPlayerActivated: "Jogador ativado.",
   toastPlayerDeactivated: "Jogador inativado.",
   toastPlayerActiveFail: "Não foi possível atualizar o estado. Tente novamente.",
@@ -119,9 +120,9 @@ export const strings = {
   sundayGameLineupProvisional:
     "Escalação provisória: sortear de novo só mexe no rascunho. Quando iniciar a partida, vale pro resto do dia.",
   sundayGameSaveBeforeDraw: "Salve as configurações acima antes de sortear.",
-  sundayGameStartHold: "Segure para apitar o início do jogo",
+  sundayGameStartHold: "Segure para liberar a aba Partida",
   sundayGameStartHoldHint:
-    "O jogo só entra ao vivo na aba Partida: abra essa tela e segure o botão de apito até completar. Até apitar, pode sortear de novo; depois a escalação fica oficial.",
+    "Até segurar o botão verde abaixo, a aba Partida não mostra este jogo (só jogos já ao vivo). Depois de liberar, abra a Partida e toque em «Iniciar partida» para o apito final. Pode sortear de novo enquanto não iniciar.",
   matchDayBannerTitle: "Dia de jogo",
   matchDayBannerSubtitle:
     "Janela de domingo na base (a partir das 06:00 no horário do servidor). O sorteio em si pode ser feito em qualquer dia.",
@@ -254,8 +255,11 @@ export const strings = {
   matchLiveAwaitingKickoff:
     "Esta partida ainda não começou. Inicie quando estiver pronto — o cronômetro e o placar só rodam após o início.",
   matchLiveStartMatchCta: "Iniciar partida",
-  matchLiveStartMatchRegionAria: "Iniciar partida — segure o botão até completar para apitar o início",
   matchLiveStartMatchNoPermission: "Apenas organizadores podem dar início à partida.",
+  matchLiveBoardLockedTitle: "Partida ainda não liberada",
+  matchLiveBoardLockedBody:
+    "O sorteio já está no servidor, mas a aba Partida só mostra este jogo depois que alguém com permissão for à Início e segurar o botão verde. Jogos já ao vivo em outro dispositivo continuam visíveis aqui.",
+  matchLiveBoardLockedCta: "Ir à Início",
   matchLiveCloseDayHold: "Segure para dar fim às partidas do dia.",
   matchDayRuleDuration: "Duração (minutos)",
   matchDayRuleMaxGoals: "Máx. de gols por time",

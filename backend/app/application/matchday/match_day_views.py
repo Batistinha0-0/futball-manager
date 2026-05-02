@@ -49,6 +49,7 @@ class SessionView:
     fixed_goalkeeper_player_id_1: str | None
     fixed_goalkeeper_player_id_2: str | None
     lineup_official: bool
+    partida_board_unlocked: bool
     teams: tuple[TeamView, ...]
     fixtures: tuple[FixtureView, ...]
     king_queue: KingQueueView | None

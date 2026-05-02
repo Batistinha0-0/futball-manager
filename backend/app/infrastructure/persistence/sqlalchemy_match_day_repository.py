@@ -52,6 +52,7 @@ def _session_from_row(r: MatchDaySessionRow) -> MatchDaySession:
         king_state_json=r.king_state_json,
         closed_at=r.closed_at,
         day_summary_json=r.day_summary_json,
+        partida_board_unlocked=bool(r.partida_board_unlocked),
     )
 
 
@@ -162,6 +163,7 @@ class SqlAlchemyMatchDayRepository(MatchDayRepository):
                 king_state_json=session.king_state_json,
                 closed_at=session.closed_at,
                 day_summary_json=session.day_summary_json,
+                partida_board_unlocked=session.partida_board_unlocked,
             )
             self._s.add(row)
         else:
@@ -186,6 +188,7 @@ class SqlAlchemyMatchDayRepository(MatchDayRepository):
             row.king_state_json = session.king_state_json
             row.closed_at = session.closed_at
             row.day_summary_json = session.day_summary_json
+            row.partida_board_unlocked = session.partida_board_unlocked
         # Garantir INSERT/UPDATE da sessão antes de filhos (times/fixtures) no mesmo flush/commit —
         # sem relationship FK, o SQLAlchemy pode ordenar INSERTs por nome de tabela e violar FK no Postgres.
         self._s.flush()

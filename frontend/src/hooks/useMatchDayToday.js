@@ -11,6 +11,7 @@ import {
   postFixtureTimeExpired,
   postCloseMatchDay,
   postMatchDayDraw,
+  postUnlockPartidaBoard,
 } from "../services/matchdayApi.js";
 import {
   getMatchDaySessionDate,
@@ -36,6 +37,7 @@ function normalizeSessionDate(/** @type {string | null | undefined} */ d) {
  *   settingsSaving: boolean,
  *   refetch: () => Promise<void>,
  *   draw: () => Promise<void>,
+ *   unlockPartidaBoard: () => Promise<void>,
  *   patchSettings: (patch: Record<string, unknown>) => Promise<void>,
  *   startFixture: (fixtureId: string) => Promise<void>,
  *   finishFixture: (fixtureId: string) => Promise<void>,
@@ -163,6 +165,14 @@ export function useMatchDayToday() {
     [run, selectedSessionDate],
   );
 
+  const unlockPartidaBoard = useCallback(
+    () =>
+      run(() => postUnlockPartidaBoard(selectedSessionDate ?? undefined), {
+        successMessage: strings.toastMatchDayPartidaBoardUnlocked,
+      }),
+    [run, selectedSessionDate],
+  );
+
   const patchSettings = useCallback(
     /** @param {Record<string, unknown>} patch */
     async (patch) => {
@@ -227,6 +237,7 @@ export function useMatchDayToday() {
     settingsSaving,
     refetch,
     draw,
+    unlockPartidaBoard,
     patchSettings,
     startFixture,
     finishFixture,

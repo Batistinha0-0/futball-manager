@@ -28,6 +28,8 @@ class MatchDaySession:
     king_state_json: str | None = None
     closed_at: datetime | None = None
     day_summary_json: str | None = None
+    # Após sorteio: False até apito na Início (ou iniciar partida); libera UI da aba Partida.
+    partida_board_unlocked: bool = False
 
 
 @dataclass(frozen=True, slots=True)

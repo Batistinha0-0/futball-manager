@@ -28,6 +28,15 @@ export function postMatchDayDraw(sessionDate) {
 }
 
 /**
+ * Libera a UI da aba Partida (sem iniciar o cronômetro) — após segurar o apito na Início.
+ * @param {string | null | undefined} [sessionDate]
+ * @returns {Promise<Record<string, unknown>>}
+ */
+export function postUnlockPartidaBoard(sessionDate) {
+  return apiPost(`/api/v1/match-day/today/unlock-partida-board${sessionDateSuffix(sessionDate)}`, {});
+}
+
+/**
  * @param {string | null | undefined} [sessionDate]
  * @returns {Promise<Record<string, unknown>>}
  */
